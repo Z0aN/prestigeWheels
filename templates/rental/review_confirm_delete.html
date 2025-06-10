@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Удаление отзыва{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 d-flex flex-column" style="margin-top: -80px; padding-top: 80px; margin-bottom: -100px; padding-bottom: 100px;">
+    <div class="container py-5 flex-grow-1">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Подтверждение удаления</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <h6 class="mb-2">Вы действительно хотите удалить этот отзыв?</h6>
+                            <p class="mb-1"><strong>Автомобиль:</strong> {{ review.booking.car.brand }} {{ review.booking.car.name }}</p>
+                            <p class="mb-1"><strong>Оценка:</strong> {{ review.get_rating_display }}</p>
+                            <p class="mb-1"><strong>Комментарий:</strong> {{ review.comment }}</p>
+                        </div>
+
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-danger">Удалить отзыв</button>
+                                <a href="{% url 'my_bookings' %}" class="btn btn-outline-secondary">Отмена</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

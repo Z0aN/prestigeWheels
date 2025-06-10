@@ -1,0 +1,474 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<!-- Header-->
+<header class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="container px-4 px-lg-5 my-5 position-relative">
+        <div class="text-center text-white animate-hero">
+            <h1 class="display-4 fw-bold mb-4 text-shadow">{% random_greeting %}</h1>
+            <p class="lead fw-normal text-white mb-4 text-shadow">Твоя роскошь — на старте за 5 минут</p>
+            <a href="#cars-section" class="btn btn-outline-light btn-lg px-4 animate-bounce">
+                <span>Смотреть автомобили</span>
+                <i class="bi bi-arrow-down ms-2"></i>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- Section-->
+<section class="py-5" id="cars-section">
+    <div class="container px-4 px-lg-5 mt-5">
+        {% if current_category %}
+            <div class="text-center mb-5 animate-fade-in">
+                <h2 class="display-6 fw-bold mb-3">{{ current_category }}</h2>
+                <a href="{% url 'index' %}" class="btn btn-link text-decoration-none">
+                    <i class="bi bi-grid-3x3-gap me-2"></i>Все категории
+                </a>
+            </div>
+        {% endif %}
+
+        <div class="filter-section card shadow-sm mb-5 animate-fade-in">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    {% if current_category %}
+                        <input type="hidden" name="type" value="{{ current_category }}">
+                    {% endif %}
+                    
+                    <div class="col-md-2">
+                        <label for="per_page" class="form-label text-muted">
+                            <i class="bi bi-grid me-1"></i>Показать по
+                        </label>
+                        <select name="per_page" id="per_page" class="form-select">
+                            <option value="4" {% if per_page == 4 %}selected{% endif %}>4</option>
+                            <option value="8" {% if per_page == 8 %}selected{% endif %}>8</option>
+                            <option value="12" {% if per_page == 12 %}selected{% endif %}>12</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="sort" class="form-label text-muted">
+                            <i class="bi bi-sort-down me-1"></i>Сортировка
+                        </label>
+                        <select name="sort" id="sort" class="form-select">
+                            <option value="price" {% if current_sort == 'price' %}selected{% endif %}>По возрастанию цены</option>
+                            <option value="-price" {% if current_sort == '-price' %}selected{% endif %}>По убыванию цены</option>
+                            <option value="name" {% if current_sort == 'name' %}selected{% endif %}>По названию А-Я</option>
+                            <option value="-name" {% if current_sort == '-name' %}selected{% endif %}>По названию Я-А</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-5">
+                        <label class="form-label text-muted">
+                            <i class="bi bi-currency-dollar me-1"></i>Диапазон цен
+                        </label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="min_price" name="min_price" 
+                                   value="{{ min_price|default:'' }}" 
+                                   min="{{ car_stats.min_price|floatformat:0 }}" 
+                                   max="{{ car_stats.max_price|floatformat:0 }}" 
+                                   step="100" 
+                                   placeholder="От">
+                            <span class="input-group-text">—</span>
+                            <input type="number" class="form-control" id="max_price" name="max_price" 
+                                   value="{{ max_price|default:'' }}" 
+                                   min="{{ car_stats.min_price|floatformat:0 }}" 
+                                   max="{{ car_stats.max_price|floatformat:0 }}" 
+                                   step="100" 
+                                   placeholder="До">
+                            <span class="input-group-text">AED</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-2 d-flex align-items-end">
+                        <div class="d-flex gap-2 w-100">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-search me-1"></i>Найти
+                            </button>
+                            {% if min_price or max_price or current_sort != 'price' or per_page != 4 %}
+                                <a href="{% if current_category %}?type={{ current_category }}{% else %}?{% endif %}" 
+                                   class="btn btn-outline-secondary" title="Сбросить фильтры">
+                                    <i class="bi bi-x-lg"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="stats-card card bg-primary text-white mb-5 animate-fade-in">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-6 border-end">
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-car-front fs-4"></i>
+                            <div>
+                                <h6 class="mb-0">Доступно автомобилей</h6>
+                                <h3 class="mb-0">{{ car_stats.total }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-currency-dollar fs-4"></i>
+                            <div>
+                                <h6 class="mb-0">Средняя цена в день</h6>
+                                <h3 class="mb-0">{{ car_stats.avg_price|floatformat:0 }} AED</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 animate-cards">
+            {% for car in cars %}
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <div class="car-card card h-100 shadow-hover">
+                    <!-- Product image -->
+                    <div class="card-img-wrapper">
+                        {% if car.image %}
+                            <img class="card-img-top" src="{{ car.image.url }}" alt="{{ car.name }}">
+                        {% else %}
+                            <img class="card-img-top" src="{% static 'assets/default.jpg' %}" alt="Без фото">
+                        {% endif %}
+                        <div class="card-img-overlay d-flex align-items-start justify-content-end">
+                            <span class="badge bg-primary price-badge">
+                                от {{ car.price|floatformat:0 }} AED/день
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Product details -->
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold mb-3">{{ car.brand }} {{ car.name }}</h5>
+                    </div>
+
+                    <!-- Product actions -->
+                    <div class="card-footer bg-transparent border-top-0">
+                        <div class="d-grid gap-2">
+                            <a class="btn btn-outline-primary" href="{{ car.get_absolute_url }}">
+                                <i class="bi bi-info-circle me-1"></i>Подробнее
+                            </a>
+                            {% if car.is_available %}
+                                {% if user.is_authenticated %}
+                                    <a href="{% url 'book_car' car.id %}" class="btn btn-primary">
+                                        <i class="bi bi-calendar-check me-1"></i>Забронировать
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">
+                                        <i class="bi bi-box-arrow-in-right me-1"></i>Войдите, чтобы забронировать
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="bi bi-x-circle me-1"></i>Недоступно
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <div class="empty-state">
+                    <i class="bi bi-car-front display-1 text-muted mb-3"></i>
+                    <h3>Автомобили не найдены</h3>
+                    <p class="text-muted">Попробуйте изменить параметры поиска</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if cars %}
+        <nav class="mt-5" aria-label="Навигация по страницам">
+            <ul class="pagination justify-content-center">
+                {% if cars.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1&per_page={{ per_page }}" aria-label="Первая">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ cars.previous_page_number }}&per_page={{ per_page }}" aria-label="Предыдущая">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">{{ cars.number }} из {{ cars.paginator.num_pages }}</span>
+                </li>
+
+                {% if cars.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ cars.next_page_number }}&per_page={{ per_page }}" aria-label="Следующая">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ cars.paginator.num_pages }}&per_page={{ per_page }}" aria-label="Последняя">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+    /* Hero Section */
+    .hero-section {
+        position: relative;
+        height: 70vh;
+        min-height: 500px;
+        background: url('{% static 'assets/bg.jpg' %}') center/cover no-repeat;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1;
+    }
+
+    .hero-section .container {
+        z-index: 2;
+    }
+
+    .text-shadow {
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Animations */
+    .animate-hero {
+        animation: fadeInUp 1s ease-out;
+    }
+
+    .animate-bounce {
+        animation: bounce 2s infinite;
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .animate-cards {
+        --stagger: 0.1s;
+    }
+
+    .animate-cards > * {
+        opacity: 0;
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    @for $i from 1 through 12 {
+        .animate-cards > *:nth-child(#{$i}) {
+            animation-delay: calc(var(--stagger) * #{$i});
+        }
+    }
+
+    /* Car Cards */
+    .car-card {
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .shadow-hover {
+        transition: all 0.3s ease;
+    }
+
+    .shadow-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .card-img-wrapper {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+    }
+
+    .card-img-top {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .car-card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+
+    .price-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 30px;
+        font-weight: 500;
+        font-size: 1.1rem;
+        backdrop-filter: blur(10px);
+        background-color: rgba(var(--bs-primary-rgb), 0.9);
+    }
+
+    /* Filter Section */
+    .filter-section {
+        border: none;
+        background-color: white;
+    }
+
+    .form-select, .form-control {
+        border-radius: 0.5rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        padding: 0.75rem 1rem;
+    }
+
+    .form-select:focus, .form-control:focus {
+        border-color: var(--bs-primary);
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.1);
+    }
+
+    /* Stats Card */
+    .stats-card {
+        border: none;
+        background: linear-gradient(45deg, var(--bs-primary), #0056b3);
+    }
+
+    .stats-card .border-end {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 3rem;
+        text-align: center;
+    }
+
+    /* Pagination */
+    .pagination {
+        gap: 0.5rem;
+    }
+
+    .page-link {
+        border-radius: 0.5rem;
+        border: none;
+        padding: 0.75rem 1rem;
+        color: var(--bs-primary);
+    }
+
+    .page-item.active .page-link {
+        background-color: var(--bs-primary);
+        color: white;
+    }
+
+    .page-link:hover {
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
+        color: var(--bs-primary);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+        }
+        40% {
+            transform: translateY(-20px);
+        }
+        60% {
+            transform: translateY(-10px);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-section {
+            height: 50vh;
+            min-height: 400px;
+        }
+
+        .card-img-wrapper {
+            height: 180px;
+        }
+
+        .stats-card .border-end {
+            border: none !important;
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Smooth scroll for hero button
+        document.querySelector('a[href="#cars-section"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelector('#cars-section').scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+
+        // Intersection Observer for cards animation
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        document.querySelectorAll('.animate-cards > *').forEach(card => {
+            observer.observe(card);
+        });
+    });
+</script>
+{% endblock %}

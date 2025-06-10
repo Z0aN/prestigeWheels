@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Изменение бронирования{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 d-flex flex-column" style="margin-top: -80px; padding-top: 80px; margin-bottom: -100px; padding-bottom: 100px;">
+    <div class="container py-5 flex-grow-1">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Изменение бронирования</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <div class="alert alert-info mb-4">
+                            <h6 class="mb-2">Информация о бронировании:</h6>
+                            <p class="mb-1"><strong>Автомобиль:</strong> {{ booking.car.brand }} {{ booking.car.name }}</p>
+                            <p class="mb-1"><strong>Текущий статус:</strong> 
+                                {% if booking.status == 'pending' %}
+                                    <span class="badge bg-warning">Ожидает</span>
+                                {% elif booking.status == 'confirmed' %}
+                                    <span class="badge bg-success">Подтверждено</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Отменено</span>
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <!-- Информация о скидках -->
+                        <div class="alert alert-info mb-4">
+                            <h6 class="mb-2"><i class="bi bi-percent"></i> Система скидок:</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><i class="bi bi-check2"></i> От 3 дней: скидка 5%</li>
+                                <li><i class="bi bi-check2"></i> От 7 дней: скидка 10%</li>
+                                <li><i class="bi bi-check2"></i> От 14 дней: скидка 15%</li>
+                                <li><i class="bi bi-check2"></i> От 30 дней: скидка 20%</li>
+                            </ul>
+                        </div>
+
+                        <form method="post" id="bookingForm">
+                            {% csrf_token %}
+                            {% for field in form %}
+                                {% if field.name == 'date_from' or field.name == 'date_to' %}
+                                    {% if field.name == 'date_from' %}
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                            {{ field }}
+                                            {% if field.help_text %}
+                                                <div class="form-text">{{ field.help_text }}</div>
+                                            {% endif %}
+                                            {% if field.errors %}
+                                                <div class="alert alert-danger mt-2">
+                                                    {{ field.errors }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% else %}
+                                        <div class="col-md-6">
+                                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                            {{ field }}
+                                            {% if field.help_text %}
+                                                <div class="form-text">{{ field.help_text }}</div>
+                                            {% endif %}
+                                            {% if field.errors %}
+                                                <div class="alert alert-danger mt-2">
+                                                    {{ field.errors }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="mb-3">
+                                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                        {{ field }}
+                                        {% if field.help_text %}
+                                            <div class="form-text">{{ field.help_text }}</div>
+                                        {% endif %}
+                                        {% if field.errors %}
+                                            <div class="alert alert-danger mt-2">
+                                                {{ field.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                            {% endif %}
+
+                            <!-- Калькулятор стоимости -->
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Расчет стоимости:</h6>
+                                    <div id="priceCalculation" style="display: none;">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Количество дней:</span>
+                                            <strong id="daysCount">0</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span>Базовая стоимость:</span>
+                                            <strong id="basePrice">0 AED</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2" id="servicesBlock" style="display: none;">
+                                            <span>Стоимость доп. услуг:</span>
+                                            <strong class="text-info" id="servicesAmount">0 AED</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2" id="discountBlock" style="display: none;">
+                                            <span>Скидка <span id="discountPercentage">0</span>%:</span>
+                                            <strong class="text-success" id="discountAmount">0 AED</strong>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Итоговая стоимость:</span>
+                                            <strong class="text-primary" id="totalPrice">0 AED</strong>
+                                        </div>
+                                    </div>
+                                    <div id="selectDatesMessage">
+                                        Выберите даты для расчета стоимости
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                                <a href="{% url 'my_bookings' %}" class="btn btn-outline-secondary">Отмена</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateFromInput = document.getElementById('{{ form.date_from.id_for_label }}');
+    const dateToInput = document.getElementById('{{ form.date_to.id_for_label }}');
+    const priceCalculation = document.getElementById('priceCalculation');
+    const selectDatesMessage = document.getElementById('selectDatesMessage');
+    const basePrice = parseFloat('{{ booking.car.price|stringformat:"f" }}');
+    
+    // Получаем все чекбоксы услуг
+    const serviceCheckboxes = document.querySelectorAll('input[name="{{ form.selected_services.name }}"]');
+    
+    // Создаем объект с ценами услуг
+    const servicePrices = {};
+    {% for service in booking.car.carservice_set.all %}
+        servicePrices['{{ service.service.id }}'] = parseFloat('{{ service.price|stringformat:"f" }}');
+    {% endfor %}
+
+    function calculatePrice() {
+        if (dateFromInput.value && dateToInput.value) {
+            const dateFrom = new Date(dateFromInput.value);
+            const dateTo = new Date(dateToInput.value);
+            
+            if (dateFrom > dateTo) return;
+
+            const days = Math.floor((dateTo - dateFrom) / (1000 * 60 * 60 * 24)) + 1;
+            const basePriceTotal = days * basePrice;
+            
+            // Считаем стоимость выбранных услуг
+            let servicesTotal = 0;
+            serviceCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    servicesTotal += servicePrices[checkbox.value] * days;
+                }
+            });
+
+            let discountPercentage = 0;
+            if (days >= 30) discountPercentage = 20;
+            else if (days >= 14) discountPercentage = 15;
+            else if (days >= 7) discountPercentage = 10;
+            else if (days >= 3) discountPercentage = 5;
+
+            const subtotal = basePriceTotal + servicesTotal;
+            const discountAmount = (subtotal * discountPercentage) / 100;
+            const totalPrice = subtotal - discountAmount;
+
+            // Обновляем отображение
+            document.getElementById('daysCount').textContent = days;
+            document.getElementById('basePrice').textContent = basePriceTotal.toFixed(0) + ' AED';
+            
+            // Показываем стоимость услуг, только если есть выбранные услуги
+            const servicesBlock = document.getElementById('servicesBlock');
+            let hasSelectedServices = false;
+            serviceCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    hasSelectedServices = true;
+                }
+            });
+            
+            if (hasSelectedServices) {
+                document.getElementById('servicesAmount').textContent = servicesTotal.toFixed(0) + ' AED';
+                servicesBlock.style.display = 'flex';
+            } else {
+                servicesBlock.style.display = 'none';
+            }
+            
+            // Показываем скидку, если она есть
+            const discountBlock = document.getElementById('discountBlock');
+            if (discountPercentage > 0) {
+                document.getElementById('discountPercentage').textContent = discountPercentage;
+                document.getElementById('discountAmount').textContent = discountAmount.toFixed(0) + ' AED';
+                discountBlock.style.display = 'flex';
+            } else {
+                discountBlock.style.display = 'none';
+            }
+
+            document.getElementById('totalPrice').textContent = totalPrice.toFixed(0) + ' AED';
+            
+            priceCalculation.style.display = 'block';
+            selectDatesMessage.style.display = 'none';
+        } else {
+            priceCalculation.style.display = 'none';
+            selectDatesMessage.style.display = 'block';
+        }
+    }
+
+    // Добавляем обработчики событий
+    dateFromInput.addEventListener('change', calculatePrice);
+    dateToInput.addEventListener('change', calculatePrice);
+    serviceCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', calculatePrice);
+    });
+
+    // Вызываем расчет при загрузке страницы, если даты уже выбраны
+    if (dateFromInput.value && dateToInput.value) {
+        calculatePrice();
+    }
+});
+</script>
+{% endblock %} 

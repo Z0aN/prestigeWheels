@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+<div class="profile-page min-vh-100 d-flex flex-column" style="margin-top: -80px; padding-top: 80px; margin-bottom: -100px; padding-bottom: 100px;">
+    <div class="container py-5 flex-grow-1">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="profile-header animate-fade-in">
+                    <h1 class="display-5 fw-bold text-gradient mb-4">
+                        <i class="bi bi-person-circle me-2"></i>Профиль
+                    </h1>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} animate-fade-in">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="card profile-card animate-fade-in mb-4">
+                    <div class="card-header bg-white border-bottom-0 pt-4">
+                        <h5 class="card-title mb-0 fw-bold">
+                            <i class="bi bi-person-vcard me-2"></i>Основная информация
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" class="profile-form">
+                            {% csrf_token %}
+                            {% for field in form %}
+                                <div class="form-group mb-4 animate-fade-in" style="animation-delay: {{ forloop.counter|add:1 }}00ms">
+                                    <label for="{{ field.id_for_label }}" class="form-label fw-medium">
+                                        <i class="bi bi-{{ field.name|lower }}-fill me-2"></i>{{ field.label }}
+                                    </label>
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <div class="invalid-feedback d-block animate-shake">
+                                            {{ field.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                            <button type="submit" name="profile_update" class="btn btn-primary btn-lg save-button">
+                                <i class="bi bi-check-circle me-2"></i>Сохранить изменения
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card profile-card animate-fade-in">
+                    <div class="card-header bg-white border-bottom-0 pt-4">
+                        <h5 class="card-title mb-0 fw-bold">
+                            <i class="bi bi-key me-2"></i>Изменить пароль
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" class="password-form">
+                            {% csrf_token %}
+                            {% for field in password_form %}
+                                <div class="form-group mb-4 animate-fade-in" style="animation-delay: {{ forloop.counter|add:5 }}00ms">
+                                    <label for="{{ field.id_for_label }}" class="form-label fw-medium">
+                                        <i class="bi bi-lock-fill me-2"></i>{{ field.label }}
+                                    </label>
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <div class="invalid-feedback d-block animate-shake">
+                                            {{ field.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                            <button type="submit" name="password_update" class="btn btn-primary btn-lg save-button">
+                                <i class="bi bi-shield-lock me-2"></i>Изменить пароль
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-page {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    }
+
+    /* Animations */
+    .animate-fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .animate-shake {
+        animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes shake {
+        10%, 90% { transform: translate3d(-1px, 0, 0); }
+        20%, 80% { transform: translate3d(2px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+        40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+
+    /* Profile Header */
+    .profile-header {
+        margin-bottom: 2rem;
+    }
+
+    .text-gradient {
+        background: linear-gradient(45deg, var(--bs-primary), #0056b3);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Profile Card */
+    .profile-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    }
+
+    /* Form Styles */
+    .form-group {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .form-group:hover {
+        transform: translateX(5px);
+    }
+
+    .form-label {
+        font-size: 0.95rem;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        border: 1px solid rgba(0,0,0,0.1);
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--bs-primary);
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.1);
+        transform: translateX(5px);
+    }
+
+    .invalid-feedback {
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        border-radius: 8px;
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+
+    /* Save Button */
+    .save-button {
+        border-radius: 10px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .save-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(var(--bs-primary-rgb), 0.2);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .profile-card {
+            margin-bottom: 2rem;
+        }
+
+        .form-group:hover {
+            transform: none;
+        }
+
+        .form-control:focus {
+            transform: none;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Добавляем классы для стилизации стандартных полей формы
+    document.querySelectorAll('input').forEach(input => {
+        if (!input.classList.contains('form-control')) {
+            input.classList.add('form-control');
+        }
+    });
+
+    // Анимация появления элементов при скролле
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+
+    document.querySelectorAll('.animate-fade-in').forEach(el => {
+        observer.observe(el);
+    });
+});
+</script>
+{% endblock %} 

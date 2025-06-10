@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}О нас - Prestige Wheels{% endblock %}
+
+{% block extra_css %}
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<style>
+    .about-section {
+        padding: 100px 0;
+    }
+    
+    .about-image {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .about-image:hover {
+        transform: translateY(-10px);
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        color: #0d6efd;
+    }
+    
+    .team-member {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .team-member img {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 20px;
+        border: 5px solid white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .stats-card {
+        text-align: center;
+        padding: 30px;
+        background: linear-gradient(135deg, #0d6efd, #0099ff);
+        color: white;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    .parallax-section {
+        background-attachment: fixed;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        padding: 150px 0;
+        position: relative;
+        color: white;
+    }
+    
+    .parallax-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+    }
+    
+    .parallax-content {
+        position: relative;
+        z-index: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="parallax-section" style="background-image: url('{% static 'assets/about-hero.jpg' %}');">
+    <div class="container">
+        <div class="parallax-content text-center">
+            <h1 class="display-3 mb-4" data-aos="fade-up">Prestige Wheels</h1>
+            <p class="lead mb-4" data-aos="fade-up" data-aos-delay="200">Ваш надежный партнер в мире роскошных автомобилей</p>
+        </div>
+    </div>
+</div>
+
+<!-- About Section -->
+<section class="about-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6" data-aos="fade-right">
+                <img src="{% static 'assets/about-1.jpg' %}" alt="О нас" class="img-fluid about-image">
+            </div>
+            <div class="col-lg-6" data-aos="fade-left">
+                <h2 class="mb-4">Наша История</h2>
+                <p class="lead mb-4">Prestige Wheels начала свой путь в 2020 году с простой идеи: сделать аренду роскошных автомобилей доступной и удобной для каждого.</p>
+                <p>Мы гордимся тем, что предоставляем нашим клиентам исключительный сервис и широкий выбор премиальных автомобилей. Наша миссия - сделать каждую поездку незабываемой.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5" data-aos="fade-up">Почему Выбирают Нас</h2>
+        <div class="row">
+            <div class="col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="feature-card">
+                    <i class="bi bi-star-fill feature-icon"></i>
+                    <h4>Премиальный Сервис</h4>
+                    <p>Индивидуальный подход к каждому клиенту и внимание к деталям</p>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="feature-card">
+                    <i class="bi bi-car-front-fill feature-icon"></i>
+                    <h4>Лучшие Автомобили</h4>
+                    <p>Регулярно обновляемый парк роскошных автомобилей ведущих марок</p>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="feature-card">
+                    <i class="bi bi-shield-check feature-icon"></i>
+                    <h4>Гарантия Качества</h4>
+                    <p>Все автомобили проходят регулярное техническое обслуживание</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3" data-aos="zoom-in" data-aos-delay="100">
+                <div class="stats-card">
+                    <div class="stats-number">500+</div>
+                    <div>Довольных клиентов</div>
+                </div>
+            </div>
+            <div class="col-md-3" data-aos="zoom-in" data-aos-delay="200">
+                <div class="stats-card">
+                    <div class="stats-number">50+</div>
+                    <div>Автомобилей</div>
+                </div>
+            </div>
+            <div class="col-md-3" data-aos="zoom-in" data-aos-delay="300">
+                <div class="stats-card">
+                    <div class="stats-number">3</div>
+                    <div>Года опыта</div>
+                </div>
+            </div>
+            <div class="col-md-3" data-aos="zoom-in" data-aos-delay="400">
+                <div class="stats-card">
+                    <div class="stats-number">24/7</div>
+                    <div>Поддержка</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5" data-aos="fade-up">Наша Команда</h2>
+        <div class="row">
+            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="team-member">
+                    <img src="{% static 'assets/team-1.jpg' %}" alt="CEO">
+                    <h4>Александр Петров</h4>
+                    <p class="text-muted">CEO</p>
+                </div>
+            </div>
+            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="team-member">
+                    <img src="{% static 'assets/team-2.jpg' %}" alt="Manager">
+                    <h4>Елена Соколова</h4>
+                    <p class="text-muted">Менеджер по работе с клиентами</p>
+                </div>
+            </div>
+            <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="team-member">
+                    <img src="{% static 'assets/team-3.jpg' %}" alt="Technical Director">
+                    <h4>Михаил Волков</h4>
+                    <p class="text-muted">Технический директор</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section class="parallax-section" style="background-image: url('{% static 'assets/contact-bg.jpg' %}');">
+    <div class="container">
+        <div class="parallax-content text-center">
+            <h2 class="mb-4" data-aos="fade-up">Свяжитесь с Нами</h2>
+            <p class="lead mb-4" data-aos="fade-up" data-aos-delay="200">Мы всегда рады помочь вам с выбором автомобиля</p>
+            <a href="tel:+1234567890" class="btn btn-light btn-lg me-3" data-aos="fade-up" data-aos-delay="300">
+                <i class="bi bi-telephone"></i> +123 456 7890
+            </a>
+            <a href="mailto:info@prestigewheels.com" class="btn btn-outline-light btn-lg" data-aos="fade-up" data-aos-delay="400">
+                <i class="bi bi-envelope"></i> info@prestigewheels.com
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init({
+        duration: 1000,
+        once: true
+    });
+</script>
+{% endblock %} 

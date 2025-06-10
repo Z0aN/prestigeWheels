@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if is_edit %}
+        Редактирование отзыва
+    {% else %}
+        Новый отзыв
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 d-flex flex-column" style="margin-top: -80px; padding-top: 80px; margin-bottom: -100px; padding-bottom: 100px;">
+    <div class="container py-5 flex-grow-1">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            {% if is_edit %}
+                                Редактирование отзыва
+                            {% else %}
+                                Новый отзыв
+                            {% endif %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Информация о бронировании -->
+                        <div class="alert alert-info mb-4">
+                            <h6 class="mb-2">Информация о бронировании:</h6>
+                            <p class="mb-1"><strong>Автомобиль:</strong> {{ booking.car.brand }} {{ booking.car.name }}</p>
+                            <p class="mb-1"><strong>Период аренды:</strong> {{ booking.date_from|date:"d.m.Y" }} - {{ booking.date_to|date:"d.m.Y" }}</p>
+                        </div>
+
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="post">
+                            {% csrf_token %}
+                            {% for field in form %}
+                                <div class="mb-3">
+                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <div class="form-text">{{ field.help_text }}</div>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="alert alert-danger mt-2">
+                                            {{ field.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if is_edit %}
+                                        Сохранить изменения
+                                    {% else %}
+                                        Отправить отзыв
+                                    {% endif %}
+                                </button>
+                                <a href="{% url 'my_bookings' %}" class="btn btn-outline-secondary">Отмена</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

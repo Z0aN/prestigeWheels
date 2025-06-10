@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мои бронирования{% endblock %}
+
+{% block content %}
+<div class="bookings-page min-vh-100 d-flex flex-column" style="margin-top: -80px; padding-top: 80px; margin-bottom: -100px; padding-bottom: 100px;">
+    <div class="container py-5 flex-grow-1">
+        <div class="d-flex align-items-center gap-2 mb-4 fade-in">
+            <i class="bi bi-calendar2-check fs-2"></i>
+            <h1 class="mb-0">Мои бронирования</h1>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} animate-alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if bookings %}
+            <div class="bookings-grid">
+                {% for booking in bookings %}
+                    <div class="booking-card card h-100 shadow-sm hover-card">
+                        <div class="card-header border-0 bg-transparent pt-3 px-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0 fw-bold text-primary">{{ booking.car.brand }} {{ booking.car.name }}</h5>
+                                <span class="badge-custom {% if booking.status == 'confirmed' %}badge-success{% elif booking.status == 'pending' %}badge-warning{% else %}badge-danger{% endif %}">
+                                    {{ booking.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="car-image-wrapper mb-3">
+                                {% if booking.car.image %}
+                                    <img src="{{ booking.car.image.url }}" class="car-image" alt="{{ booking.car.name }}">
+                                {% else %}
+                                    <img src="{% static 'assets/default.jpg' %}" class="car-image" alt="Нет фото">
+                                {% endif %}
+                            </div>
+                            <div class="booking-details">
+                                <div class="info-item">
+                                    <i class="bi bi-calendar-range text-primary"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Период аренды</small>
+                                        <strong>{{ booking.date_from|date:"d.m.Y" }} - {{ booking.date_to|date:"d.m.Y" }}</strong>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <i class="bi bi-clock text-primary"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Длительность</small>
+                                        <strong>{{ booking.days_count }} дн.</strong>
+                                    </div>
+                                </div>
+                                
+                                {% if booking.services.exists %}
+                                    <div class="services-section mt-3">
+                                        <h6 class="text-muted mb-2">Дополнительные услуги:</h6>
+                                        <div class="services-list">
+                                            {% for service in booking.services.all %}
+                                                <div class="service-item">
+                                                    <i class="bi bi-check2-circle text-success"></i>
+                                                    <span>{{ service.service.name }}</span>
+                                                    <span class="text-primary">{{ service.price|floatformat:0 }} AED</span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <div class="total-price mt-3">
+                                    <h5 class="mb-0 d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Итого:</span>
+                                        <span class="text-primary fw-bold">{{ booking.total_price|floatformat:0 }} AED</span>
+                                    </h5>
+                                </div>
+
+                                <div class="mt-4">
+                                    {% if booking.status == 'pending' %}
+                                        <div class="d-flex gap-2">
+                                            <a href="{% url 'edit_booking_dates' booking.id %}" class="btn btn-outline-primary btn-hover w-100">
+                                                <i class="bi bi-calendar"></i> Изменить
+                                            </a>
+                                            <form action="{% url 'cancel_booking' booking.id %}" method="post" class="d-inline w-100">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-danger btn-hover w-100">
+                                                    <i class="bi bi-x-circle"></i> Отменить
+                                                </button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if booking.status == 'confirmed' %}
+                                        {% if booking.date_to <= today %}
+                                            {% if not booking.review %}
+                                                <div class="review-prompt animate-fade-in">
+                                                    <p class="mb-2 text-success"><i class="bi bi-emoji-smile"></i> Поделитесь своими впечатлениями!</p>
+                                                    <a href="{% url 'create_review' booking.id %}" class="btn btn-success btn-hover w-100">
+                                                        <i class="bi bi-star"></i> Оставить отзыв
+                                                    </a>
+                                                </div>
+                                            {% else %}
+                                                <div class="review-card mt-3">
+                                                    <div class="review-header">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <h6 class="mb-0"><i class="bi bi-chat-quote"></i> Ваш отзыв</h6>
+                                                            <small class="text-muted">{{ booking.review.created_at|date:"d.m.Y H:i" }}</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="review-body">
+                                                        <div class="rating mb-2">
+                                                            {% for i in "12345"|make_list %}
+                                                                {% if forloop.counter <= booking.review.rating %}
+                                                                    <i class="bi bi-star-fill text-warning"></i>
+                                                                {% else %}
+                                                                    <i class="bi bi-star text-warning"></i>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </div>
+                                                        <p class="review-text">{{ booking.review.comment }}</p>
+                                                        <div class="review-actions">
+                                                            <a href="{% url 'edit_review' booking.review.id %}" class="btn btn-sm btn-outline-primary btn-hover">
+                                                                <i class="bi bi-pencil"></i> Редактировать
+                                                            </a>
+                                                            <a href="{% url 'delete_review' booking.review.id %}" class="btn btn-sm btn-outline-danger btn-hover">
+                                                                <i class="bi bi-trash"></i> Удалить
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% else %}
+                                            <div class="review-wait animate-fade-in">
+                                                <small class="text-muted">
+                                                    <i class="bi bi-info-circle"></i>
+                                                    Отзыв можно будет оставить после {{ booking.date_to|date:"d.m.Y" }}
+                                                </small>
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state animate-fade-in">
+                <div class="text-center py-5">
+                    <i class="bi bi-calendar-x display-1 text-muted mb-3"></i>
+                    <h3>У вас пока нет бронирований</h3>
+                    <p class="text-muted">Выберите автомобиль для аренды прямо сейчас!</p>
+                    <a href="{% url 'index' %}" class="btn btn-primary btn-hover">
+                        <i class="bi bi-car-front"></i> Выбрать автомобиль
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .bookings-page {
+        background-color: #f8f9fa;
+    }
+
+    .bookings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .booking-card {
+        transition: all 0.3s ease;
+        border: none;
+        background: white;
+        overflow: hidden;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+
+    .car-image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 200px;
+        overflow: hidden;
+        border-radius: 8px;
+    }
+
+    .car-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .booking-card:hover .car-image {
+        transform: scale(1.05);
+    }
+
+    .badge-custom {
+        padding: 0.5em 1em;
+        border-radius: 30px;
+        font-weight: 500;
+        font-size: 0.75rem;
+    }
+
+    .badge-success {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .badge-warning {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .badge-danger {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding: 0.5rem;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+    }
+
+    .info-item i {
+        font-size: 1.2rem;
+    }
+
+    .services-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .service-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+
+    .service-item i {
+        font-size: 1rem;
+    }
+
+    .service-item span:last-child {
+        margin-left: auto;
+    }
+
+    .btn-hover {
+        transition: all 0.3s ease;
+    }
+
+    .btn-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .review-card {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .review-header {
+        padding: 1rem;
+        background-color: rgba(0,0,0,0.02);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .review-body {
+        padding: 1rem;
+    }
+
+    .review-text {
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .review-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .review-prompt {
+        text-align: center;
+        padding: 1rem;
+        background-color: #d1e7dd;
+        border-radius: 8px;
+    }
+
+    .review-wait {
+        text-align: center;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .empty-state {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .animate-alert {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .bookings-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .car-image-wrapper {
+            height: 180px;
+        }
+    }
+</style>
+{% endblock %} 
