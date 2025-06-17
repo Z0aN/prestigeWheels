@@ -1,15 +1,12 @@
 from django.contrib import admin
-from django.urls import path, include  # подключаем include
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from rental.views import register, logout_view
 
 urlpatterns = [
-    path('admin/', admin.site.urls),         # путь к админке
-    path('', include('rental.urls')),        # путь к твоему сайту (главной)
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('register/', register, name='register'),
-    path('logout/', logout_view, name='logout'),
+    path('admin/', admin.site.urls),
+    path('api/', include('rental.api_urls')),
+    path('api-auth/', include('rest_framework.urls')),
 ]
 
 if settings.DEBUG:
