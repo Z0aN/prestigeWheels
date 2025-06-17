@@ -8,7 +8,7 @@ from django.db.models import Q
 from .models import Car, Service, Booking, Review
 from .serializers import (
     CarSerializer, ServiceSerializer, BookingSerializer, 
-    ReviewSerializer, UserSerializer, UserRegistrationSerializer
+    ReviewSerializer, PublicReviewSerializer, UserSerializer, UserRegistrationSerializer, PasswordChangeSerializer
 )
 
 
@@ -45,7 +45,16 @@ class CarListView(generics.ListAPIView):
                 Q(name__icontains=search) | Q(brand__icontains=search)
             )
         
-        return queryset.order_by('-average_rating', 'price')
+        # Сортировка
+        ordering = self.request.query_params.get('ordering', 'price')
+        
+        # Проверяем, что поле для сортировки валидное
+        valid_ordering_fields = ['price', '-price', 'name', '-name', 'average_rating', '-average_rating']
+        if ordering in valid_ordering_fields:
+            return queryset.order_by(ordering)
+        
+        # По умолчанию сортируем по цене
+        return queryset.order_by('price')
 
 
 class CarDetailView(generics.RetrieveAPIView):
@@ -98,16 +107,22 @@ class ReviewListCreateView(generics.ListCreateAPIView):
         if self.request.method == 'GET':
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
+    
+    def perform_create(self, serializer):
+        serializer.save()
 
 
 class PublicReviewListView(generics.ListAPIView):
     """Публичные отзывы для отображения на сайте"""
-    serializer_class = ReviewSerializer
+    serializer_class = PublicReviewSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None  # Отключаем пагинацию для публичного API
     
     def get_queryset(self):
         car_id = self.request.query_params.get('car_id')
-        queryset = Review.objects.filter(is_public=True, is_moderated=True)
+        queryset = Review.objects.filter(is_public=True, is_moderated=True).select_related(
+            'booking__user', 'booking__car'
+        )
         
         if car_id:
             queryset = queryset.filter(booking__car_id=car_id)
@@ -208,3 +223,87 @@ def car_types(request):
     """Список всех типов кузова"""
     types = Car.objects.values_list('type', flat=True).distinct().order_by('type')
     return Response(list(types)) 
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def can_review_car(request, car_id):
+    """Проверка возможности добавления отзыва для автомобиля"""
+    # Проверяем, есть ли у пользователя завершенное бронирование этого автомобиля
+    has_booking = Booking.objects.filter(
+        user=request.user,
+        car_id=car_id,
+        status='confirmed'
+    ).exists()
+    
+    # Проверяем, не добавлял ли пользователь уже отзыв для этого автомобиля
+    has_review = Review.objects.filter(
+        booking__user=request.user,
+        booking__car_id=car_id
+    ).exists()
+    
+    return Response({
+        'can_review': has_booking and not has_review,
+        'has_booking': has_booking,
+        'has_review': has_review
+    })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def latest_reviews(request):
+    """Получение последних отзывов для каждого автомобиля"""
+    from django.db.models import OuterRef, Subquery
+    
+    # Подзапрос для получения последнего отзыва каждого автомобиля
+    latest_review_ids = Review.objects.filter(
+        booking__car_id=OuterRef('booking__car_id'),
+        is_public=True,
+        is_moderated=True
+    ).order_by('-created_at').values('id')[:1]
+    
+    # Получаем последние отзывы
+    latest_reviews = Review.objects.filter(
+        id__in=Subquery(latest_review_ids),
+        is_public=True,
+        is_moderated=True
+    ).select_related('booking__car', 'booking__user').order_by('-created_at')
+    
+    serializer = PublicReviewSerializer(latest_reviews, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def similar_cars(request, car_id):
+    """Получение похожих автомобилей"""
+    try:
+        current_car = Car.objects.get(id=car_id)
+    except Car.DoesNotExist:
+        return Response({'error': 'Автомобиль не найден'}, status=404)
+    
+    # Получаем похожие автомобили: того же бренда или типа, исключая текущий
+    from django.db import models
+    similar_cars_qs = Car.objects.filter(
+        models.Q(brand=current_car.brand) | models.Q(type=current_car.type),
+        is_available=True
+    ).exclude(id=current_car.id).order_by('?')[:6]  # 6 случайных похожих автомобилей
+    
+    serializer = CarSerializer(similar_cars_qs, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def change_password(request):
+    """Смена пароля пользователя"""
+    serializer = PasswordChangeSerializer(data=request.data)
+    if serializer.is_valid():
+        old_password = serializer.validated_data['old_password']
+        new_password = serializer.validated_data['new_password']
+        if not request.user.check_password(old_password):
+            return Response({"old_password": ["Неверный текущий пароль"]}, status=status.HTTP_400_BAD_REQUEST)
+        request.user.set_password(new_password)
+        request.user.save()
+        return Response({"message": "Пароль успешно изменен"})
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 

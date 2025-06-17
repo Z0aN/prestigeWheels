@@ -106,7 +106,8 @@ class Booking(models.Model):
             ('pending', 'Ожидает'),
             ('confirmed', 'Подтверждено'),
             ('cancelled', 'Отменено'),
-        ]
+        ],
+        default='pending'
     )
     services = models.ManyToManyField(
         CarService,
@@ -171,7 +172,7 @@ class Review(models.Model):
     created_at = models.DateTimeField("Дата создания", auto_now_add=True)
     updated_at = models.DateTimeField("Дата обновления", auto_now=True)
     is_public = models.BooleanField("Опубликован", default=True)
-    is_moderated = models.BooleanField("Проверен модератором", default=False)
+    is_moderated = models.BooleanField("Проверен модератором", default=True)
 
     class Meta:
         verbose_name = "Отзыв"
@@ -211,10 +212,15 @@ class Review(models.Model):
             except Exception:
                 pass  # Игнорируем ошибки отправки почты
 
-        # Если рейтинг низкий (1 или 2), автоматически скрываем отзыв
+        # Если рейтинг низкий (1 или 2), автоматически скрываем отзыв от публикации
         if self.rating <= 2:
             self.is_public = False
             self.is_moderated = False
+        else:
+            # Для хороших отзывов (3-5) автоматически делаем публичными и модерированными
+            if not self.pk:  # Только для новых отзывов
+                self.is_public = True
+                self.is_moderated = True
 
         # Если отзыв редактировался, сбрасываем флаг модерации
         if self.pk:
@@ -229,10 +235,13 @@ class Review(models.Model):
 
     def update_car_stats(self):
         """Обновляет статистику отзывов для автомобиля"""
+        from django.db import models
+        
         car = self.booking.car
         reviews = Review.objects.filter(
             booking__car=car,
-            is_public=True
+            is_public=True,
+            is_moderated=True
         )
         avg_rating = reviews.aggregate(models.Avg('rating'))['rating__avg']
         total_reviews = reviews.count()

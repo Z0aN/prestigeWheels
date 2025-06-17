@@ -1,8 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { carsAPI } from '../../services/api';
 import { Car } from '../../types';
+import { Button, Card, Rating } from '../../components/UI';
 import styles from './HomePage.module.css';
 import globalStyles from '../../styles/globals.module.css';
 
@@ -40,71 +40,89 @@ const HomePage: React.FC = () => {
                 Prestige<span className={styles.accent}>Wheels</span>
               </h1>
               <p className={styles.heroSubtitle}>
-                Эксклюзивная аренда премиальных автомобилей для незабываемых путешествий
+                Откройте для себя новый уровень комфорта с нашей коллекцией премиальных автомобилей
               </p>
               <div className={styles.heroButtons}>
-                <Link to="/cars" className={styles.primaryButton}>
-                  Каталог автомобилей
-                  <svg className={styles.buttonIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <Button 
+                  variant="filled" 
+                  color="primary" 
+                  size="large"
+                  onClick={() => window.location.href = '/cars'}
+                  endIcon={
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
-                </Link>
+                  }
+                >
+                  Выбрать автомобиль
+                </Button>
               </div>
-            </div>
-            <div className={styles.heroVisual}>
-              <div className={styles.heroGradient}></div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className={styles.stats}>
+      <section className={styles.stats} aria-label="Статистика">
         <div className={globalStyles.container}>
           <div className={styles.statsGrid}>
-            <div className={styles.statItem}>
+            <Card variant="flat" size="medium" className={styles.statCard}>
+              <Card.Content>
               <div className={styles.statNumber}>50+</div>
               <div className={styles.statLabel}>Премиальных автомобилей</div>
-            </div>
-            <div className={styles.statItem}>
+              </Card.Content>
+            </Card>
+            <Card variant="flat" size="medium" className={styles.statCard}>
+              <Card.Content>
               <div className={styles.statNumber}>1000+</div>
               <div className={styles.statLabel}>Довольных клиентов</div>
-            </div>
-            <div className={styles.statItem}>
+              </Card.Content>
+            </Card>
+            <Card variant="flat" size="medium" className={styles.statCard}>
+              <Card.Content>
               <div className={styles.statNumber}>24/7</div>
               <div className={styles.statLabel}>Поддержка клиентов</div>
-            </div>
-            <div className={styles.statItem}>
+              </Card.Content>
+            </Card>
+            <Card variant="flat" size="medium" className={styles.statCard}>
+              <Card.Content>
               <div className={styles.statNumber}>100%</div>
               <div className={styles.statLabel}>Гарантия качества</div>
-            </div>
+              </Card.Content>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* Featured Cars Section */}
-      <section className={styles.featuredCars}>
+      <section className={styles.featuredCars} aria-label="Популярные автомобили">
         <div className={globalStyles.container}>
-          <div className={styles.sectionHeader}>
+          <header className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Наши автомобили</h2>
             <p className={styles.sectionSubtitle}>
               Выберите идеальный автомобиль из нашей коллекции
             </p>
-          </div>
+          </header>
           
           {error ? (
-            <div className={styles.error}>
+            <div className={styles.error} role="alert">
               <p>Ошибка загрузки автомобилей. Пожалуйста, попробуйте позже.</p>
             </div>
           ) : isLoading ? (
-            <div className={styles.loading}>
+            <div className={styles.loading} role="status">
               <div className={styles.loadingSpinner}></div>
               <p>Загружаем автомобили...</p>
             </div>
           ) : featuredCars.length > 0 ? (
             <div className={styles.carsGrid}>
               {featuredCars.map((car: Car) => (
-                <div key={car.id} className={styles.carCard}>
+                <Card 
+                  key={car.id} 
+                  variant="elevated" 
+                  size="large" 
+                  className={styles.carCard}
+                  onClick={() => window.location.href = `/cars/${car.id}`}
+                >
                   <div className={styles.carImageContainer}>
                     <img 
                       src={car.image || 'https://via.placeholder.com/400x250?text=No+Image'} 
@@ -124,32 +142,50 @@ const HomePage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  <div className={styles.carContent}>
+                  <div className={styles.contentContainer}>
                     <div className={styles.carHeader}>
                       <h3 className={styles.carName}>{car.brand} {car.name}</h3>
+                    </div>
                       <div className={styles.carRating}>
-                        <span className={styles.ratingValue}>
-                          ★ {Number(car.average_rating || 0).toFixed(1)}
+                      {(car.total_reviews && Number(car.total_reviews) > 0) ? (
+                        <>
+                          <Rating
+                            value={Number(car.average_rating || 0)}
+                            readonly
+                            size="small"
+                          />
+                          <span className={styles.reviewsCount}>
+                            {car.total_reviews} отзывов
                         </span>
+                        </>
+                      ) : (
                         <span className={styles.reviewsCount}>
-                          ({car.total_reviews || 0})
+                          Нет отзывов
                         </span>
-                      </div>
+                      )}
                     </div>
                     <div className={styles.carPrice}>
-                      <span className={styles.priceValue}>
-                        {Number(car.price || 0).toLocaleString()} ₽
-                      </span>
-                      <span className={styles.pricePeriod}>/сутки</span>
+                      <span className={styles.priceValue}>{Number(car.price || 0).toLocaleString()} ₽</span>
+                      <span className={styles.pricePeriod}>за сутки</span>
                     </div>
-                    <Link 
-                      to={`/cars/${car.id}`} 
-                      className={`${styles.carButton} ${!car.is_available ? styles.disabledButton : ''}`}
+                    <div className={styles.cardActions}>
+                      <Button 
+                        variant={car.is_available ? "filled" : "outlined"}
+                        color={car.is_available ? "primary" : "secondary"}
+                        disabled={!car.is_available}
+                        fullWidth
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (car.is_available) {
+                            window.location.href = `/cars/${car.id}`;
+                          }
+                        }}
                     >
                       {car.is_available ? 'Подробнее' : 'Недоступен'}
-                    </Link>
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           ) : (
@@ -159,23 +195,29 @@ const HomePage: React.FC = () => {
           )}
           
           <div className={styles.viewAll}>
-            <Link to="/cars" className={styles.secondaryButton}>
+            <Button 
+              variant="outlined" 
+              color="primary" 
+              size="large"
+              onClick={() => window.location.href = '/cars'}
+            >
               Посмотреть все автомобили
-            </Link>
+            </Button>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className={styles.features}>
+      <section className={styles.features} aria-label="Преимущества">
         <div className={globalStyles.container}>
-          <div className={styles.sectionHeader}>
+          <header className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Почему выбирают нас</h2>
-          </div>
+          </header>
           <div className={styles.featuresGrid}>
-            <div className={styles.featureCard}>
+            <Card variant="outlined" size="medium" className={styles.featureCard}>
+              <Card.Content>
               <div className={styles.featureIcon}>
-                <svg fill="currentColor" viewBox="0 0 24 24">
+                  <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M5 13l4 4L19 7"/>
                 </svg>
               </div>
@@ -183,10 +225,12 @@ const HomePage: React.FC = () => {
               <p className={styles.featureDescription}>
                 Только лучшие автомобили с полным техническим обслуживанием
               </p>
-            </div>
-            <div className={styles.featureCard}>
+              </Card.Content>
+            </Card>
+            <Card variant="outlined" size="medium" className={styles.featureCard}>
+              <Card.Content>
               <div className={styles.featureIcon}>
-                <svg fill="currentColor" viewBox="0 0 24 24">
+                  <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
               </div>
@@ -194,10 +238,12 @@ const HomePage: React.FC = () => {
               <p className={styles.featureDescription}>
                 Оформление за 5 минут онлайн с моментальным подтверждением
               </p>
-            </div>
-            <div className={styles.featureCard}>
+              </Card.Content>
+            </Card>
+            <Card variant="outlined" size="medium" className={styles.featureCard}>
+              <Card.Content>
               <div className={styles.featureIcon}>
-                <svg fill="currentColor" viewBox="0 0 24 24">
+                  <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
               </div>
@@ -205,10 +251,12 @@ const HomePage: React.FC = () => {
               <p className={styles.featureDescription}>
                 Комплексное страхование КАСКО для вашего спокойствия
               </p>
-            </div>
-            <div className={styles.featureCard}>
+              </Card.Content>
+            </Card>
+            <Card variant="outlined" size="medium" className={styles.featureCard}>
+              <Card.Content>
               <div className={styles.featureIcon}>
-                <svg fill="currentColor" viewBox="0 0 24 24">
+                  <svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                 </svg>
               </div>
@@ -216,7 +264,8 @@ const HomePage: React.FC = () => {
               <p className={styles.featureDescription}>
                 Круглосуточная помощь и консультации по всем вопросам
               </p>
-            </div>
+              </Card.Content>
+            </Card>
           </div>
         </div>
       </section>

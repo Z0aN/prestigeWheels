@@ -19,7 +19,7 @@ const Header: React.FC = () => {
 
   if (isLoading) {
     return (
-      <header className={styles.header}>
+      <header className={styles.header} role="banner">
         <div className={styles.container}>
           <Link to="/" className={styles.logo}>
             <h1>Prestige Wheels</h1>
@@ -30,24 +30,27 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header className={styles.header}>
+    <header className={styles.header} role="banner">
       <div className={styles.container}>
         <Link to="/" className={styles.logo}>
           <h1>Prestige Wheels</h1>
         </Link>
 
-        <nav className={`${styles.nav} ${isMenuOpen ? styles.navOpen : ''}`}>
+        <nav className={`${styles.nav} ${isMenuOpen ? styles.navOpen : ''}`} role="navigation" aria-label="Основное меню">
           <Link to="/" className={styles.navLink}>
             Главная
+          </Link>
+          <Link to="/about" className={styles.navLink}>
+            О нас
           </Link>
           <Link to="/cars" className={styles.navLink}>
             Автомобили
           </Link>
           
           {user ? (
-            <div className={styles.userMenu}>
-              <div className={styles.userProfile}>
-                <div className={styles.userAvatar}>
+            <div className={styles.userMenu} role="menu">
+              <div className={styles.userProfile} role="menuitem">
+                <div className={styles.userAvatar} aria-hidden="true">
                   {(user.first_name?.[0] || user.username?.[0] || 'U').toUpperCase()}
                 </div>
                 <div className={styles.userInfo}>
@@ -65,15 +68,19 @@ const Header: React.FC = () => {
                       </svg>
                       Мой профиль
                     </Link>
-                    <Link to="/bookings" className={styles.dropdownItem}>
+                    {user.is_superuser && (
+                      <a 
+                        href={`${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:8000'}/admin/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.dropdownItem}
+                      >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                        <line x1="16" y1="2" x2="16" y2="6"/>
-                        <line x1="8" y1="2" x2="8" y2="6"/>
-                        <line x1="3" y1="10" x2="21" y2="10"/>
+                          <path d="M12 1l3 9h9l-7 5.5 3 9-8-6-8 6 3-9-7-5.5h9z"/>
                       </svg>
-                      Мои бронирования
-                    </Link>
+                        Админ-панель
+                      </a>
+                    )}
                     <div className={styles.dropdownDivider}></div>
                     <button onClick={handleLogout} className={styles.dropdownItem}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -88,11 +95,11 @@ const Header: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className={styles.authLinks}>
-              <Link to="/login" className={styles.navLink}>
+            <div className={styles.authLinks} role="menu">
+              <Link to="/login" className={styles.navLink} role="menuitem">
                 Войти
               </Link>
-              <Link to="/register" className={styles.registerBtn}>
+              <Link to="/register" className={styles.registerBtn} role="menuitem">
                 Регистрация
               </Link>
             </div>
@@ -102,6 +109,9 @@ const Header: React.FC = () => {
         <button
           className={styles.mobileMenuBtn}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label={isMenuOpen ? "Закрыть меню" : "Открыть меню"}
+          aria-expanded={isMenuOpen}
+          aria-controls="main-menu"
         >
           <span></span>
           <span></span>

@@ -1,0 +1,176 @@
+/* Rating Container */
+.rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stars {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Star Container */
+.starContainer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.readonly .starContainer {
+  cursor: default;
+}
+
+.disabled .starContainer {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Star Click Areas */
+.starHalf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+}
+
+.starLeft {
+  left: 0;
+  width: 50%;
+}
+
+.starRight {
+  right: 0;
+  width: 50%;
+}
+
+.starFull {
+  left: 0;
+  right: 0;
+  width: 100%;
+}
+
+/* Star Icon */
+.starIcon {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.starIcon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Star States */
+.starIcon.empty {
+  color: #d1d5db;
+}
+
+.starIcon.half,
+.starIcon.full {
+  color: currentColor;
+}
+
+/* Sizes */
+.small .starIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.medium .starIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.large .starIcon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Dense spacing */
+.dense .stars {
+  gap: 0.125rem;
+}
+
+/* Colors */
+.primary .starIcon.full,
+.primary .starIcon.half {
+  color: #6366f1;
+}
+
+.secondary .starIcon.full,
+.secondary .starIcon.half {
+  color: #64748b;
+}
+
+.warning .starIcon.full,
+.warning .starIcon.half {
+  color: #f59e0b;
+}
+
+.error .starIcon.full,
+.error .starIcon.half {
+  color: #ef4444;
+}
+
+.success .starIcon.full,
+.success .starIcon.half {
+  color: #10b981;
+}
+
+/* Value Display */
+.valueDisplay {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-left: 0.25rem;
+}
+
+.small .valueDisplay {
+  font-size: 0.75rem;
+}
+
+.large .valueDisplay {
+  font-size: 1rem;
+}
+
+/* Hover Effects */
+.starContainer:hover .starIcon {
+  transform: scale(1.1);
+}
+
+.readonly .starContainer:hover .starIcon,
+.disabled .starContainer:hover .starIcon {
+  transform: none;
+}
+
+/* Focus Styles */
+.starHalf:focus {
+  outline: none;
+}
+
+.starContainer:focus-within .starIcon {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Disabled State */
+.disabled {
+  pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .large .starIcon {
+    width: 20px;
+    height: 20px;
+  }
+} 

@@ -5,6 +5,7 @@ import { authAPI, bookingsAPI } from '../../services/api';
 import { Booking } from '../../types';
 import styles from './ProfilePage.module.css';
 import globalStyles from '../../styles/globals.module.css';
+import { Button, Input, Card } from '../../components/UI';
 
 const ProfilePage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -14,12 +15,22 @@ const ProfilePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'profile' | 'bookings'>('profile');
   const [isEditing, setIsEditing] = useState(false);
+  const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
+  const [loadingBookingId, setLoadingBookingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({
     first_name: '',
     last_name: '',
     email: ''
   });
   const [error, setError] = useState<string | null>(null);
+  const [editBookingId, setEditBookingId] = useState<number | null>(null);
+  const [editDates, setEditDates] = useState<{date_from: string, date_to: string}>({date_from: '', date_to: ''});
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -49,7 +60,13 @@ const ProfilePage: React.FC = () => {
     try {
       setIsLoading(true);
       const bookingsData = await bookingsAPI.getAll();
-      setBookings(bookingsData);
+      
+      // Проверяем, если данные приходят в формате пагинации
+      const bookingsArray = Array.isArray(bookingsData) 
+        ? bookingsData 
+        : (bookingsData as any)?.results || [];
+      
+      setBookings(bookingsArray);
     } catch (error) {
       console.error('Error loading bookings:', error);
       setError('Ошибка загрузки бронирований');
@@ -68,6 +85,24 @@ const ProfilePage: React.FC = () => {
     } catch (error: any) {
       console.error('Error updating profile:', error);
       setError(error.message || 'Ошибка обновления профиля');
+    }
+  };
+
+  const handleCancelBooking = async (bookingId: number) => {
+    if (!window.confirm('Вы уверены, что хотите отменить это бронирование?')) {
+      return;
+    }
+
+    try {
+      setLoadingBookingId(bookingId);
+      await bookingsAPI.update(bookingId, { status: 'cancelled' });
+      await loadBookings(); // Перезагружаем список
+      setError(null);
+    } catch (error: any) {
+      console.error('Error cancelling booking:', error);
+      setError(error.message || 'Ошибка отмены бронирования');
+    } finally {
+      setLoadingBookingId(null);
     }
   };
 
@@ -94,11 +129,72 @@ const ProfilePage: React.FC = () => {
     });
   };
 
-  const calculateDays = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  // Удаляем неиспользуемую функцию calculateDays
+
+  const filteredBookings = Array.isArray(bookings) 
+    ? bookings.filter(booking => {
+        if (bookingFilter === 'all') return true;
+        return booking.status === bookingFilter;
+      })
+    : [];
+
+  const getBookingStats = () => {
+    if (!Array.isArray(bookings)) {
+      return { total: 0, pending: 0, confirmed: 0, cancelled: 0 };
+    }
+    
+    const stats = {
+      total: bookings.length,
+      pending: bookings.filter(b => b.status === 'pending').length,
+      confirmed: bookings.filter(b => b.status === 'confirmed').length,
+      cancelled: bookings.filter(b => b.status === 'cancelled').length,
+    };
+    return stats;
+  };
+
+  const handleOpenEditModal = (booking: Booking) => {
+    setEditBookingId(booking.id);
+    setEditDates({date_from: booking.date_from, date_to: booking.date_to});
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditBookingDates = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editBookingId) return;
+    try {
+      setLoadingBookingId(editBookingId);
+      await bookingsAPI.update(editBookingId, {
+        date_from: editDates.date_from,
+        date_to: editDates.date_to
+      });
+      setIsEditModalOpen(false);
+      setEditBookingId(null);
+      await loadBookings();
+      setError(null);
+    } catch (error: any) {
+      setError(error.message || 'Ошибка изменения дат бронирования');
+    } finally {
+      setLoadingBookingId(null);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    setSuccessMessage(null);
+    try {
+      await authAPI.changePassword({
+        old_password: oldPassword,
+        new_password: newPassword,
+        new_password_confirm: newPasswordConfirm
+      });
+      setSuccessMessage('Пароль успешно изменен');
+      setOldPassword('');
+      setNewPassword('');
+      setNewPasswordConfirm('');
+    } catch (err: any) {
+      setPasswordError(err.message || 'Ошибка при смене пароля');
+    }
   };
 
   if (!isAuthenticated || !user) {
@@ -171,7 +267,7 @@ const ProfilePage: React.FC = () => {
               <line x1="8" y1="2" x2="8" y2="6"/>
               <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            История заказов ({bookings.length})
+            Мои бронирования ({Array.isArray(bookings) ? bookings.length : 0})
           </button>
         </div>
 
@@ -275,12 +371,56 @@ const ProfilePage: React.FC = () => {
                   </div>
                 )}
               </div>
+              <Card size="large" variant="elevated" className={styles.passwordCard}>
+                <Card.Header>
+                  <h2>Смена пароля</h2>
+                </Card.Header>
+                <form onSubmit={handlePasswordChange} autoComplete="off">
+                  <Card.Content>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <Input
+                        type="password"
+                        value={oldPassword}
+                        onChange={(e) => setOldPassword(e.target.value)}
+                        placeholder="Текущий пароль"
+                        required
+                        label="Текущий пароль"
+                      />
+                    </div>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <Input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Новый пароль"
+                        required
+                        label="Новый пароль"
+                      />
+                    </div>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <Input
+                        type="password"
+                        value={newPasswordConfirm}
+                        onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                        placeholder="Подтверждение нового пароля"
+                        required
+                        label="Подтверждение нового пароля"
+                      />
+                    </div>
+                    {passwordError && <div className={styles.errorMessage}>{passwordError}</div>}
+                    {successMessage && <div className={styles.successMessage}>{successMessage}</div>}
+                  </Card.Content>
+                  <Card.Actions align="left">
+                    <Button type="submit" color="primary" size="large">Изменить пароль</Button>
+                  </Card.Actions>
+                </form>
+              </Card>
             </div>
           )}
 
           {activeTab === 'bookings' && (
             <div className={styles.bookingsContent}>
-              {bookings.length === 0 ? (
+              {!Array.isArray(bookings) || bookings.length === 0 ? (
                 <div className={styles.emptyState}>
                   <div className={styles.emptyIcon}>📅</div>
                   <h3>У вас пока нет бронирований</h3>
@@ -290,8 +430,61 @@ const ProfilePage: React.FC = () => {
                   </Link>
                 </div>
               ) : (
+                <>
+                  <div className={styles.bookingsHeader}>
+                    <div className={styles.bookingsStats}>
+                      <div className={styles.stat}>
+                        <span className={styles.statNumber}>{getBookingStats().total}</span>
+                        <span className={styles.statLabel}>Всего</span>
+                      </div>
+                      <div className={styles.stat}>
+                        <span className={styles.statNumber}>{getBookingStats().pending}</span>
+                        <span className={styles.statLabel}>Ожидает</span>
+                      </div>
+                      <div className={styles.stat}>
+                        <span className={styles.statNumber}>{getBookingStats().confirmed}</span>
+                        <span className={styles.statLabel}>Подтверждено</span>
+                      </div>
+                      <div className={styles.stat}>
+                        <span className={styles.statNumber}>{getBookingStats().cancelled}</span>
+                        <span className={styles.statLabel}>Отменено</span>
+                      </div>
+                    </div>
+                    
+                    <div className={styles.bookingsFilters}>
+                      <Button
+                        className={`${styles.filterButton} ${bookingFilter === 'all' ? styles.filterActive : ''}`}
+                        variant="text"
+                        onClick={() => setBookingFilter('all')}
+                      >
+                        Все ({getBookingStats().total})
+                      </Button>
+                      <Button
+                        className={`${styles.filterButton} ${bookingFilter === 'pending' ? styles.filterActive : ''}`}
+                        variant="text"
+                        onClick={() => setBookingFilter('pending')}
+                      >
+                        Ожидает ({getBookingStats().pending})
+                      </Button>
+                      <Button
+                        className={`${styles.filterButton} ${bookingFilter === 'confirmed' ? styles.filterActive : ''}`}
+                        variant="text"
+                        onClick={() => setBookingFilter('confirmed')}
+                      >
+                        Подтверждено ({getBookingStats().confirmed})
+                      </Button>
+                      <Button
+                        className={`${styles.filterButton} ${bookingFilter === 'cancelled' ? styles.filterActive : ''}`}
+                        variant="text"
+                        onClick={() => setBookingFilter('cancelled')}
+                      >
+                        Отменено ({getBookingStats().cancelled})
+                      </Button>
+                    </div>
+                  </div>
+
                 <div className={styles.bookingsList}>
-                  {bookings.map((booking) => (
+                    {filteredBookings.map((booking) => (
                     <div key={booking.id} className={styles.bookingCard}>
                       <div className={styles.bookingImage}>
                         <img
@@ -329,8 +522,15 @@ const ProfilePage: React.FC = () => {
                             </span>
                           </div>
                           <div className={styles.bookingPrice}>
+                              <div className={styles.pricePerDay}>
                             {Number(booking.car.price || 0).toLocaleString('ru-RU')} ₽/день
                           </div>
+                              {booking.total_price && (
+                                <div className={styles.totalPrice}>
+                                  Итого: {Number(booking.total_price).toLocaleString('ru-RU')} ₽
+                                </div>
+                              )}
+                            </div>
                         </div>
                         <div className={styles.bookingActions}>
                           <Link
@@ -340,20 +540,72 @@ const ProfilePage: React.FC = () => {
                             Посмотреть автомобиль
                           </Link>
                           {booking.status === 'pending' && (
-                            <button className={styles.cancelButton}>
-                              Отменить
-                            </button>
+                            <>
+                              <Button 
+                                className={styles.cancelButton}
+                                variant="outlined"
+                                color="secondary"
+                                onClick={() => handleCancelBooking(booking.id)}
+                                disabled={loadingBookingId === booking.id}
+                              >
+                                {loadingBookingId === booking.id ? 'Отменяем...' : 'Отменить'}
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                color="primary"
+                                onClick={() => handleOpenEditModal(booking)}
+                                disabled={loadingBookingId === booking.id}
+                              >
+                                Изменить дату
+                              </Button>
+                            </>
                           )}
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
+                </>
               )}
             </div>
           )}
         </div>
       </div>
+      {isEditModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h3>Изменить даты бронирования</h3>
+            <form onSubmit={handleEditBookingDates} className={styles.editBookingForm}>
+              <Input
+                type="date"
+                label="Дата начала аренды"
+                value={editDates.date_from}
+                onChange={e => setEditDates(d => ({...d, date_from: e.target.value}))}
+                min={new Date().toISOString().split('T')[0]}
+                required
+                fullWidth
+              />
+              <Input
+                type="date"
+                label="Дата окончания аренды"
+                value={editDates.date_to}
+                onChange={e => setEditDates(d => ({...d, date_to: e.target.value}))}
+                min={editDates.date_from || new Date().toISOString().split('T')[0]}
+                required
+                fullWidth
+              />
+              <div className={styles.modalActions}>
+                <Button type="submit" variant="filled" color="primary" disabled={loadingBookingId !== null}>
+                  Сохранить
+                </Button>
+                <Button type="button" variant="outlined" color="secondary" onClick={() => setIsEditModalOpen(false)}>
+                  Отмена
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

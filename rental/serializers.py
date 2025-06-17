@@ -41,7 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name', 'date_joined']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name', 'date_joined', 'is_superuser', 'is_staff']
         
     def get_full_name(self, obj):
         if obj.first_name or obj.last_name:
@@ -73,6 +73,32 @@ class BookingSerializer(serializers.ModelSerializer):
             'base_price', 'discount_amount', 'total_price'
         ]
     
+    def validate(self, attrs):
+        # Проверяем даты
+        date_from = attrs.get('date_from')
+        date_to = attrs.get('date_to')
+        
+        if date_from and date_to and date_from >= date_to:
+            raise serializers.ValidationError(
+                "Дата окончания должна быть позже даты начала"
+            )
+        
+        # Проверяем, что автомобиль существует и доступен
+        car_id = attrs.get('car_id')
+        if car_id:
+            try:
+                car = Car.objects.get(id=car_id)
+                if not car.is_available:
+                    raise serializers.ValidationError(
+                        "Данный автомобиль недоступен для бронирования"
+                    )
+            except Car.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Автомобиль не найден"
+                )
+        
+        return attrs
+    
     def create(self, validated_data):
         service_ids = validated_data.pop('service_ids', [])
         booking = Booking.objects.create(**validated_data)
@@ -87,17 +113,94 @@ class BookingSerializer(serializers.ModelSerializer):
         return booking
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    booking = BookingSerializer(read_only=True)
-    booking_id = serializers.IntegerField(write_only=True)
+# Упрощенные сериализаторы для публичного API
+class PublicUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name']
+
+class PublicCarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Car
+        fields = ['id', 'name', 'brand', 'type']
+
+class PublicBookingSerializer(serializers.ModelSerializer):
+    user = PublicUserSerializer(read_only=True)
+    car = PublicCarSerializer(read_only=True)
+    
+    class Meta:
+        model = Booking
+        fields = ['id', 'user', 'car', 'date_from', 'date_to', 'status']
+
+class PublicReviewSerializer(serializers.ModelSerializer):
+    """Упрощенный сериализатор для публичных отзывов"""
+    booking = PublicBookingSerializer(read_only=True)
     
     class Meta:
         model = Review
         fields = [
-            'id', 'booking', 'booking_id', 'rating', 'comment',
+            'id', 'booking', 'rating', 'comment', 'created_at', 'is_public', 'is_moderated'
+        ]
+
+class ReviewSerializer(serializers.ModelSerializer):
+    booking = BookingSerializer(read_only=True)
+    booking_id = serializers.IntegerField(write_only=True, required=False)
+    car_id = serializers.IntegerField(write_only=True, required=False)
+    
+    class Meta:
+        model = Review
+        fields = [
+            'id', 'booking', 'booking_id', 'car_id', 'rating', 'comment',
             'created_at', 'updated_at', 'is_public', 'is_moderated'
         ]
         read_only_fields = ['created_at', 'updated_at', 'is_moderated']
+    
+    def validate(self, attrs):
+        # Проверяем, что указан либо booking_id, либо car_id
+        booking_id = attrs.get('booking_id')
+        car_id = attrs.get('car_id')
+        
+        if not booking_id and not car_id:
+            raise serializers.ValidationError(
+                "Необходимо указать booking_id или car_id"
+            )
+        
+        # Если указан car_id, найдем подходящее бронирование
+        if car_id and not booking_id:
+            request = self.context.get('request')
+            if not request or not request.user.is_authenticated:
+                raise serializers.ValidationError(
+                    "Необходима авторизация для создания отзыва"
+                )
+            
+            # Найдем завершенное бронирование пользователя для этого автомобиля
+            try:
+                booking = Booking.objects.filter(
+                    user=request.user,
+                    car_id=car_id,
+                    status='confirmed'
+                ).first()
+                
+                if not booking:
+                    raise serializers.ValidationError(
+                        "У вас нет завершенного бронирования для этого автомобиля"
+                    )
+                
+                # Проверим, что отзыв еще не был добавлен
+                if Review.objects.filter(booking=booking).exists():
+                    raise serializers.ValidationError(
+                        "Вы уже оставили отзыв для этого автомобиля"
+                    )
+                
+                attrs['booking_id'] = booking.id
+                attrs.pop('car_id', None)
+                
+            except Booking.DoesNotExist:
+                raise serializers.ValidationError(
+                    "У вас нет завершенного бронирования для этого автомобиля"
+                )
+        
+        return attrs
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -134,4 +237,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             password=validated_data.pop('password'),
             **validated_data
         )
-        return user 
+        return user
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True, min_length=8)
+    new_password_confirm = serializers.CharField(required=True, write_only=True)
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError({"new_password_confirm": "Пароли не совпадают"})
+        return attrs 

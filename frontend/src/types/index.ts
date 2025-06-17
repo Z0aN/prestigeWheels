@@ -33,6 +33,8 @@ export interface User {
   last_name: string;
   full_name?: string;
   date_joined?: string;
+  is_superuser?: boolean;
+  is_staff?: boolean;
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled';
@@ -50,6 +52,7 @@ export interface Booking {
   base_price: number | string;
   discount_amount: number | string;
   total_price: number | string;
+  review?: Review;
 }
 
 export interface Review {
@@ -90,7 +93,8 @@ export interface BookingData {
 }
 
 export interface ReviewData {
-  booking_id: number;
+  booking_id?: number;
+  car_id?: number;
   rating: number;
   comment: string;
 }

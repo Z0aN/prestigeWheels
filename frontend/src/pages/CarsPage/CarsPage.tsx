@@ -1,57 +1,107 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { carsAPI } from '../../services/api';
 import { Car } from '../../types';
+import { Button, Rating, Input } from '../../components/UI';
 import styles from './CarsPage.module.css';
 import globalStyles from '../../styles/globals.module.css';
 
-const CarsPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [brandFilter, setBrandFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
+// Типы для фильтров и сортировки
+type SortOption = 'price' | '-price' | '-average_rating' | 'name' | '-name';
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['cars', searchTerm, brandFilter, typeFilter, minPrice, maxPrice],
-    queryFn: () => carsAPI.getAll({
-      search: searchTerm || undefined,
-      brand: brandFilter || undefined,
-      type: typeFilter || undefined,
-      min_price: minPrice ? parseFloat(minPrice) : undefined,
-      max_price: maxPrice ? parseFloat(maxPrice) : undefined,
-    }),
+interface Filters {
+  search: string;
+  brand: string;
+  type: string;
+  minPrice: string;
+  maxPrice: string;
+}
+
+const CarsPage: React.FC = () => {
+  // Состояние фильтров и сортировки отдельно
+  const [filters, setFilters] = useState<Filters>({
+    search: '',
+    brand: '',
+    type: '',
+    minPrice: '',
+    maxPrice: '',
   });
 
+  const [sortBy, setSortBy] = useState<SortOption>('price');
+
+  // Опции сортировки (Django формат: поле для возрастания, -поле для убывания)
+  const sortOptions = [
+    { value: 'price', label: 'Цена (по возрастанию)' },
+    { value: '-price', label: 'Цена (по убыванию)' },
+    { value: '-average_rating', label: 'По рейтингу' },
+    { value: 'name', label: 'По названию (А-Я)' },
+    { value: '-name', label: 'По названию (Я-А)' }
+  ];
+
+  // Запрос данных с учетом фильтров и сортировки
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['cars', filters, sortBy],
+    queryFn: () => {
+      return carsAPI.getAll({
+        search: filters.search || undefined,
+        brand: filters.brand || undefined,
+        type: filters.type || undefined,
+        min_price: filters.minPrice ? parseFloat(filters.minPrice) : undefined,
+        max_price: filters.maxPrice ? parseFloat(filters.maxPrice) : undefined,
+        ordering: sortBy // Используем ordering вместо sort_by для Django
+      });
+    },
+  });
+
+  // Запрос брендов для динамического списка
+  const { data: brands, isLoading: brandsLoading } = useQuery({
+    queryKey: ['brands'],
+    queryFn: () => carsAPI.getBrands(),
+  });
+
+  // Запрос типов автомобилей для динамического списка
+  const { data: types, isLoading: typesLoading } = useQuery({
+    queryKey: ['types'],
+    queryFn: () => carsAPI.getTypes(),
+  });
+
+  // Обработчик изменения фильтров
+  const handleFilterChange = (name: keyof Filters, value: string) => {
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Обработчик изменения сортировки
+  const handleSortChange = (value: SortOption) => {
+    setSortBy(value);
+  };
+
+  // Сброс фильтров и сортировки
+  const handleClearFilters = () => {
+    setFilters({
+      search: '',
+      brand: '',
+      type: '',
+      minPrice: '',
+      maxPrice: '',
+    });
+    setSortBy('price');
+  };
+
+  // Получение данных из ответа API
   const cars: Car[] = (() => {
     if (!data) return [];
-    
-    // Check if response has pagination structure
     if ((data as any).results && Array.isArray((data as any).results)) {
       return (data as any).results;
     }
-    
-    // Fallback to direct array
     if (Array.isArray(data)) {
       return data;
     }
-    
     return [];
   })();
+
   const totalCount = cars.length;
-
-  const handleClearFilters = () => {
-    setSearchTerm('');
-    setBrandFilter('');
-    setTypeFilter('');
-    setMinPrice('');
-    setMaxPrice('');
-  };
-
-  const renderStars = (rating: number) => {
-    return '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
-  };
+  const navigate = useNavigate();
 
   if (error) {
     return (
@@ -74,63 +124,89 @@ const CarsPage: React.FC = () => {
           <p>Откройте для себя мир роскоши с нашей эксклюзивной коллекцией премиальных автомобилей</p>
         </div>
 
+        {/* Сортировка вынесена отдельно */}
+        <div className={styles.sortingContainer}>
+          <select
+            value={sortBy}
+            onChange={(e) => handleSortChange(e.target.value as SortOption)}
+            className={styles.sortSelect}
+          >
+            {sortOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className={styles.filters}>
           <div className={styles.filterRow}>
+            {/* Поиск */}
             <div>
-              <input
+              <Input
                 type="text"
                 placeholder="Поиск по названию..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                className={styles.searchInput}
+                fullWidth
               />
             </div>
+
+            {/* Бренд */}
             <div>
               <select
-                value={brandFilter}
-                onChange={(e) => setBrandFilter(e.target.value)}
+                value={filters.brand}
+                onChange={(e) => handleFilterChange('brand', e.target.value)}
+                disabled={brandsLoading}
               >
                 <option value="">Все бренды</option>
-                <option value="Lamborghini">Lamborghini</option>
-                <option value="Ferrari">Ferrari</option>
-                <option value="BMW">BMW</option>
-                <option value="Mercedes">Mercedes</option>
-                <option value="Porsche">Porsche</option>
-                <option value="Audi">Audi</option>
-                <option value="McLaren">McLaren</option>
+                {brands?.map(brand => (
+                  <option key={brand} value={brand}>
+                    {brand}
+                  </option>
+                ))}
               </select>
             </div>
+
+            {/* Тип */}
             <div>
               <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
+                value={filters.type}
+                onChange={(e) => handleFilterChange('type', e.target.value)}
+                disabled={typesLoading}
               >
                 <option value="">Все типы</option>
-                <option value="Спорткар">Спорткар</option>
-                <option value="Кабриолет">Кабриолет</option>
-                <option value="Внедорожник">Внедорожник</option>
-                <option value="Седан">Седан</option>
-                <option value="Купе">Купе</option>
+                {types?.map(type => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
+
+          {/* Ценовой диапазон */}
           <div className={styles.filterRow}>
             <div>
-              <input
+              <Input
                 type="number"
                 placeholder="Цена от (₽/день)"
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
+                value={filters.minPrice}
+                onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                fullWidth
               />
             </div>
             <div>
-              <input
+              <Input
                 type="number"
                 placeholder="Цена до (₽/день)"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
+                value={filters.maxPrice}
+                onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                fullWidth
               />
             </div>
-            <button onClick={handleClearFilters}>
+            <button onClick={handleClearFilters} className={styles.clearFiltersBtn}>
               Сбросить фильтры
             </button>
           </div>
@@ -158,14 +234,14 @@ const CarsPage: React.FC = () => {
             ) : (
               <div className={styles.carsGrid}>
                 {cars.map((car: Car) => (
-                  <div key={car.id} className={styles.carCard}>
+                  <div key={car.id} className={styles.carCard} onClick={() => navigate(`/cars/${car.id}`)}>
                     <div className={styles.carImage}>
                       <img
-                        src={car.image || '/api/placeholder/400/240'}
-                        alt={car.name}
+                        src={car.image || 'https://via.placeholder.com/400x250?text=No+Image'} 
+                        alt={`${car.brand} ${car.name}`}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = '/api/placeholder/400/240';
+                          target.src = 'https://via.placeholder.com/400x250?text=No+Image';
                         }}
                       />
                       <div className={styles.carType}>{car.type}</div>
@@ -175,30 +251,58 @@ const CarsPage: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <div className={styles.carInfo}>
+                    <div className={styles.contentContainer}>
                       <div className={styles.carHeader}>
                         <h3>{car.brand} {car.name}</h3>
                       </div>
                       <div className={styles.carRating}>
-                        <span className={styles.stars}>
-                          {renderStars(Number(car.average_rating || 0))}
+                        {(car.total_reviews && Number(car.total_reviews) > 0) ? (
+                          <>
+                            <Rating
+                              value={Number(car.average_rating || 0)}
+                              readonly
+                              size="small"
+                            />
+                            <span className={styles.reviewsCount}>
+                              {car.total_reviews} отзывов
                         </span>
-                        <span>{Number(car.average_rating || 0).toFixed(1)}</span>
+                          </>
+                        ) : (
                         <span className={styles.reviewsCount}>
-                          ({car.total_reviews || 0} отзывов)
+                            Нет отзывов
                         </span>
+                        )}
                       </div>
                       <div className={styles.carPrice}>
-                        <span className={styles.price}>{Number(car.price || 0).toLocaleString()}</span>
-                        <span className={styles.period}>₽/день</span>
+                        <span className={styles.price}>{Number(car.price || 0).toLocaleString()} ₽</span>
+                        <span className={styles.period}>/ сутки</span>
                       </div>
                       <div className={styles.carActions}>
-                        <Link to={`/cars/${car.id}`} className={styles.detailsBtn}>
+                        <Button 
+                          variant="outlined"
+                          color="primary"
+                          fullWidth
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/cars/${car.id}`);
+                          }}
+                        >
                           Подробнее
-                        </Link>
-                        <Link to={`/booking/${car.id}`} className={`${styles.bookBtn} ${!car.is_available ? styles.disabled : ''}`}>
-                          Забронировать
-                        </Link>
+                        </Button>
+                        <Button 
+                          variant="filled"
+                          color="primary"
+                          fullWidth
+                          disabled={!car.is_available}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (car.is_available) {
+                              navigate(`/booking/${car.id}`);
+                            }
+                          }}
+                        >
+                          {car.is_available ? 'Забронировать' : 'Недоступен'}
+                        </Button>
                       </div>
                     </div>
                   </div>

@@ -1,0 +1,362 @@
+/* Base Button Styles */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Sizes */
+.small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  min-height: 32px;
+}
+
+.medium {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  min-height: 40px;
+}
+
+.large {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  min-height: 48px;
+}
+
+/* Full Width */
+.fullWidth {
+  width: 100%;
+}
+
+/* Variants & Colors */
+
+/* PRIMARY COLOR */
+.filled.primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+}
+
+.filled.primary:hover:not(.disabled) {
+  background: linear-gradient(135deg, #5b5ff5 0%, #7c3aed 100%);
+  transform: translateY(-1px);
+}
+
+.outlined.primary {
+  background: transparent;
+  color: #6366f1;
+  border: 2px solid #6366f1;
+}
+
+.outlined.primary:hover:not(.disabled) {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.text.primary {
+  background: transparent;
+  color: #6366f1;
+}
+
+.text.primary:hover:not(.disabled) {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.tonal.primary {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+}
+
+.tonal.primary:hover:not(.disabled) {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+/* SECONDARY COLOR */
+.filled.secondary {
+  background: #64748b;
+  color: white;
+}
+
+.filled.secondary:hover:not(.disabled) {
+  background: #475569;
+  transform: translateY(-1px);
+}
+
+.outlined.secondary {
+  background: transparent;
+  color: #64748b;
+  border: 2px solid #64748b;
+}
+
+.outlined.secondary:hover:not(.disabled) {
+  background: rgba(100, 116, 139, 0.1);
+}
+
+.text.secondary {
+  background: transparent;
+  color: #64748b;
+}
+
+.text.secondary:hover:not(.disabled) {
+  background: rgba(100, 116, 139, 0.1);
+}
+
+.tonal.secondary {
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+}
+
+.tonal.secondary:hover:not(.disabled) {
+  background: rgba(100, 116, 139, 0.15);
+}
+
+/* SUCCESS COLOR */
+.filled.success {
+  background: #10b981;
+  color: white;
+}
+
+.filled.success:hover:not(.disabled) {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.outlined.success {
+  background: transparent;
+  color: #10b981;
+  border: 2px solid #10b981;
+}
+
+.outlined.success:hover:not(.disabled) {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.text.success {
+  background: transparent;
+  color: #10b981;
+}
+
+.text.success:hover:not(.disabled) {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.tonal.success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.tonal.success:hover:not(.disabled) {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+/* ERROR COLOR */
+.filled.error {
+  background: #ef4444;
+  color: white;
+}
+
+.filled.error:hover:not(.disabled) {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.outlined.error {
+  background: transparent;
+  color: #ef4444;
+  border: 2px solid #ef4444;
+}
+
+.outlined.error:hover:not(.disabled) {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.text.error {
+  background: transparent;
+  color: #ef4444;
+}
+
+.text.error:hover:not(.disabled) {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.tonal.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.tonal.error:hover:not(.disabled) {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* WARNING COLOR */
+.filled.warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.filled.warning:hover:not(.disabled) {
+  background: #d97706;
+  transform: translateY(-1px);
+}
+
+.outlined.warning {
+  background: transparent;
+  color: #f59e0b;
+  border: 2px solid #f59e0b;
+}
+
+.outlined.warning:hover:not(.disabled) {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.text.warning {
+  background: transparent;
+  color: #f59e0b;
+}
+
+.text.warning:hover:not(.disabled) {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.tonal.warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.tonal.warning:hover:not(.disabled) {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+/* INFO COLOR */
+.filled.info {
+  background: #3b82f6;
+  color: white;
+}
+
+.filled.info:hover:not(.disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.outlined.info {
+  background: transparent;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+}
+
+.outlined.info:hover:not(.disabled) {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.text.info {
+  background: transparent;
+  color: #3b82f6;
+}
+
+.text.info:hover:not(.disabled) {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.tonal.info {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.tonal.info:hover:not(.disabled) {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+/* States */
+.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.loading {
+  pointer-events: none;
+}
+
+/* Icons */
+.startIcon,
+.endIcon {
+  display: flex;
+  align-items: center;
+  font-size: 1.2em;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+}
+
+/* Loading Spinner */
+.loadingSpinner {
+  display: flex;
+  align-items: center;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+}
+
+.spinnerPath {
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .large {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
+  
+  .medium {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+  
+  .small {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+} 

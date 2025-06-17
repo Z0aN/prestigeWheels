@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { config } from '../config';
+// Удаляем неиспользуемый импорт config
 import {
   Car,
   Service,
@@ -85,11 +85,15 @@ export const carsAPI = {
     min_price?: number;
     max_price?: number;
     search?: string;
+    ordering?: string;
   }): Promise<Car[]> =>
     apiInstance.get('/cars/', { params }) as Promise<Car[]>,
   
   getById: (id: number): Promise<Car> =>
     apiInstance.get(`/cars/${id}/`) as Promise<Car>,
+  
+  getSimilar: (id: number): Promise<Car[]> =>
+    apiInstance.get(`/cars/${id}/similar/`) as Promise<Car[]>,
   
   getBrands: (): Promise<string[]> =>
     apiInstance.get('/car-brands/') as Promise<string[]>,
@@ -130,8 +134,17 @@ export const reviewsAPI = {
   getPublic: (carId?: number): Promise<Review[]> =>
     apiInstance.get('/reviews/public/', { params: carId ? { car_id: carId } : {} }) as Promise<Review[]>,
   
+  getForCar: (carId: number): Promise<Review[]> =>
+    apiInstance.get('/reviews/public/', { params: { car_id: carId } }) as Promise<Review[]>,
+  
   create: (data: ReviewData): Promise<Review> =>
     apiInstance.post('/reviews/', data) as Promise<Review>,
+  
+  canReviewCar: (carId: number): Promise<{ can_review: boolean; has_booking: boolean; has_review: boolean }> =>
+    apiInstance.get(`/reviews/can-review/${carId}/`) as Promise<{ can_review: boolean; has_booking: boolean; has_review: boolean }>,
+  
+  getLatest: (): Promise<Review[]> =>
+    apiInstance.get('/reviews/latest/') as Promise<Review[]>,
 };
 
 // Auth API
@@ -150,6 +163,9 @@ export const authAPI = {
 
   updateProfile: (data: { first_name?: string; last_name?: string; email?: string }): Promise<User> =>
     apiInstance.patch('/auth/profile/', data) as Promise<User>,
+
+  changePassword: (data: { old_password: string; new_password: string; new_password_confirm: string }): Promise<{ message: string }> =>
+    apiInstance.post('/auth/change-password/', data) as Promise<{ message: string }>,
 };
 
 // Создаем объект API с типизированными методами

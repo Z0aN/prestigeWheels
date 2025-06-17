@@ -1,0 +1,135 @@
+/* Base Card Styles */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Variants */
+.flat {
+  box-shadow: none;
+  border: 1px solid #e5e7eb;
+}
+
+.elevated {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+}
+
+.outlined {
+  box-shadow: none;
+  border: 2px solid #e5e7eb;
+}
+
+/* Sizes */
+.small {
+  padding: 1rem;
+}
+
+.medium {
+  padding: 1.5rem;
+}
+
+.large {
+  padding: 2rem;
+}
+
+/* States */
+.hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.clickable:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Card Components */
+.cardHeader {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.cardHeader:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.cardContent {
+  flex: 1;
+  margin-bottom: 1rem;
+}
+
+.cardContent:last-child {
+  margin-bottom: 0;
+}
+
+.cardActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.cardActions:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Action Alignments */
+.cardActions.align-left {
+  justify-content: flex-start;
+}
+
+.cardActions.align-center {
+  justify-content: center;
+}
+
+.cardActions.align-right {
+  justify-content: flex-end;
+}
+
+.cardActions.align-space-between {
+  justify-content: space-between;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .large {
+    padding: 1.5rem;
+  }
+  
+  .medium {
+    padding: 1rem;
+  }
+  
+  .small {
+    padding: 0.75rem;
+  }
+  
+  .cardActions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .cardActions.align-space-between {
+    flex-direction: row;
+  }
+} 

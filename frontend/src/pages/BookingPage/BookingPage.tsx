@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
 import { carsAPI, bookingsAPI } from '../../services/api';
 import { Car, CarService } from '../../types';
 import { formatPrice } from '../../utils/formatters';
 import styles from './BookingPage.module.css';
 import globalStyles from '../../styles/globals.module.css';
+import { Button, Input } from '../../components/UI';
 
 const BookingPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { id } = useParams<{ id: string }>();
   
   const [car, setCar] = useState<Car | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -140,20 +139,40 @@ const BookingPage: React.FC = () => {
     setError(null);
 
     try {
-      await bookingsAPI.create({
+      const bookingData = {
         car_id: car.id,
         date_from: startDate,
         date_to: endDate,
         service_ids: selectedServices,
-      });
+      };
+      
+      console.log('Creating booking with data:', bookingData);
+      
+      await bookingsAPI.create(bookingData);
 
-      // Перенаправляем на страницу бронирований
-      navigate('/bookings', { 
+      // Перенаправляем на страницу профиля с вкладкой бронирований
+      navigate('/profile?tab=bookings', { 
         state: { message: 'Бронирование успешно создано!' }
       });
     } catch (err: any) {
       console.error('Error creating booking:', err);
-      setError(err.message || 'Не удалось создать бронирование');
+      
+      // Более детальная обработка ошибок
+      let errorMessage = 'Не удалось создать бронирование';
+      
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        } else if (err.response.data.detail) {
+          errorMessage = err.response.data.detail;
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -252,28 +271,26 @@ const BookingPage: React.FC = () => {
               <div className={styles.dateSection}>
                 <h3>Выберите даты</h3>
                 <div className={styles.dateInputs}>
-                  <div className={styles.inputGroup}>
-                    <label htmlFor="startDate">Дата начала</label>
-                    <input
-                      type="date"
-                      id="startDate"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                      required
-                    />
-                  </div>
-                  <div className={styles.inputGroup}>
-                    <label htmlFor="endDate">Дата окончания</label>
-                    <input
-                      type="date"
-                      id="endDate"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      min={startDate || new Date().toISOString().split('T')[0]}
-                      required
-                    />
-                  </div>
+                  <Input
+                    type="date"
+                    label="Дата начала аренды"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    required
+                    disabled={isSubmitting}
+                    fullWidth
+                  />
+                  <Input
+                    type="date"
+                    label="Дата окончания аренды"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    min={startDate || new Date().toISOString().split('T')[0]}
+                    required
+                    disabled={isSubmitting}
+                    fullWidth
+                  />
                 </div>
                 {daysCount > 0 && (
                   <div className={styles.daysInfo}>
@@ -316,13 +333,15 @@ const BookingPage: React.FC = () => {
                 </div>
               )}
 
-              <button
+              <Button
                 type="submit"
-                className={styles.submitButton}
-                disabled={isSubmitting || daysCount <= 0}
+                variant="filled"
+                color="primary"
+                disabled={isSubmitting || !car?.is_available}
+                fullWidth
               >
-                {isSubmitting ? 'Создание бронирования...' : 'Забронировать'}
-              </button>
+                {isSubmitting ? 'Оформляем...' : 'Забронировать'}
+              </Button>
             </form>
           </div>
 

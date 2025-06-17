@@ -1,0 +1,308 @@
+/* Input Container */
+.inputContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* Label */
+.label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 0.25rem;
+}
+
+/* Input Wrapper */
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Base Input Styles */
+.input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  border: none;
+  outline: none;
+  background: transparent;
+  transition: all 0.2s ease;
+  resize: vertical;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Icons */
+.startIcon,
+.endIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.startIcon {
+  margin-right: 0.75rem;
+}
+
+.endIcon {
+  margin-left: 0.75rem;
+}
+
+.hasStartIcon {
+  padding-left: 0;
+}
+
+.hasEndIcon {
+  padding-right: 0;
+}
+
+/* Helper Text */
+.helperText {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.error .helperText {
+  color: #ef4444;
+}
+
+/* Variants */
+
+/* OUTLINED VARIANT */
+.outlined .inputWrapper {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.outlined .input {
+  padding: 0.75rem 1rem;
+}
+
+.outlined .input:focus {
+  outline: none;
+}
+
+.outlined .inputWrapper:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.outlined.error .inputWrapper {
+  border-color: #ef4444;
+}
+
+.outlined.error .inputWrapper:focus-within {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.outlined.disabled .inputWrapper {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* FILLED VARIANT */
+.filled .inputWrapper {
+  background: #f3f4f6;
+  border: 2px solid transparent;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 2px solid #d1d5db;
+  transition: all 0.2s ease;
+}
+
+.filled .input {
+  padding: 1rem 1rem 0.5rem;
+}
+
+.filled .inputWrapper:focus-within {
+  background: #ffffff;
+  border-bottom-color: #6366f1;
+  box-shadow: 0 1px 0 0 #6366f1;
+}
+
+.filled.error .inputWrapper {
+  border-bottom-color: #ef4444;
+}
+
+.filled.error .inputWrapper:focus-within {
+  border-bottom-color: #ef4444;
+  box-shadow: 0 1px 0 0 #ef4444;
+}
+
+.filled.disabled .inputWrapper {
+  background: #e5e7eb;
+  border-bottom-color: #9ca3af;
+}
+
+/* STANDARD VARIANT */
+.standard .inputWrapper {
+  border: none;
+  border-bottom: 1px solid #d1d5db;
+  border-radius: 0;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.standard .input {
+  padding: 0.5rem 0;
+}
+
+.standard .inputWrapper:focus-within {
+  border-bottom: 2px solid #6366f1;
+}
+
+.standard.error .inputWrapper {
+  border-bottom-color: #ef4444;
+}
+
+.standard.error .inputWrapper:focus-within {
+  border-bottom-color: #ef4444;
+}
+
+.standard.disabled .inputWrapper {
+  border-bottom-color: #9ca3af;
+}
+
+/* Sizes */
+
+/* SMALL SIZE */
+.small .input {
+  font-size: 0.875rem;
+}
+
+.small.outlined .input {
+  padding: 0.5rem 0.75rem;
+}
+
+.small.filled .input {
+  padding: 0.75rem 0.75rem 0.25rem;
+}
+
+.small.standard .input {
+  padding: 0.25rem 0;
+}
+
+.small .startIcon,
+.small .endIcon {
+  font-size: 1rem;
+}
+
+.small .startIcon {
+  margin-right: 0.5rem;
+}
+
+.small .endIcon {
+  margin-left: 0.5rem;
+}
+
+/* MEDIUM SIZE (default) */
+.medium .input {
+  font-size: 1rem;
+}
+
+/* LARGE SIZE */
+.large .input {
+  font-size: 1.125rem;
+}
+
+.large.outlined .input {
+  padding: 1rem 1.25rem;
+}
+
+.large.filled .input {
+  padding: 1.25rem 1.25rem 0.75rem;
+}
+
+.large.standard .input {
+  padding: 0.75rem 0;
+}
+
+.large .startIcon,
+.large .endIcon {
+  font-size: 1.5rem;
+}
+
+.large .startIcon {
+  margin-right: 1rem;
+}
+
+.large .endIcon {
+  margin-left: 1rem;
+}
+
+/* Textarea Specific */
+textarea.input {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.small textarea.input {
+  min-height: 80px;
+}
+
+.large textarea.input {
+  min-height: 120px;
+}
+
+/* Placeholder Styles */
+.input::placeholder {
+  color: #9ca3af;
+  opacity: 1;
+}
+
+.disabled .input::placeholder {
+  color: #d1d5db;
+}
+
+/* Focus States for Icons */
+.inputWrapper:focus-within .startIcon,
+.inputWrapper:focus-within .endIcon {
+  color: #6366f1;
+}
+
+.error .inputWrapper:focus-within .startIcon,
+.error .inputWrapper:focus-within .endIcon {
+  color: #ef4444;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .large .input {
+    font-size: 1rem;
+  }
+  
+  .large.outlined .input {
+    padding: 0.875rem 1rem;
+  }
+  
+  .large.filled .input {
+    padding: 1rem 1rem 0.5rem;
+  }
+  
+  .large .startIcon,
+  .large .endIcon {
+    font-size: 1.25rem;
+  }
+} 
