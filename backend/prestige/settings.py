@@ -143,6 +143,7 @@ LOCALE_PATHS = [BASE_DIR / 'locale']
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'assets',
+    BASE_DIR / 'static',  # Добавляем папку для кастомных CSS/JS файлов админки
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 

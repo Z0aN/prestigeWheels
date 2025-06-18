@@ -239,7 +239,7 @@ const CarDetailPage: React.FC = () => {
                 ))}
               </div>
               <span className={styles.ratingText}>
-                {Number(car.average_rating || 0).toFixed(1)} ({Number(car.total_reviews || 0)} {t('carDetail.reviews', { count: Number(car.total_reviews || 0) })})
+                {Number(car.average_rating || 0).toFixed(1)} ({t('carDetail.reviews', { count: Number(car.total_reviews || 0) })})
               </span>
             </div>
 

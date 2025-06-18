@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
-from .models import Booking, Review
+from .models import Booking, Review, CarImage
+from .widgets import DragDropImageWidget, BulkImageUploadWidget
 from datetime import date
 
 class UserProfileForm(forms.ModelForm):
@@ -170,3 +171,122 @@ class ReviewForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if booking:
             self.instance.booking = booking 
+
+class CarImageUploadForm(forms.ModelForm):
+    """Форма для загрузки одной фотографии автомобиля"""
+    class Meta:
+        model = CarImage
+        fields = ['image', 'title', 'description', 'is_main', 'is_active', 'order']
+        widgets = {
+            'image': DragDropImageWidget(),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Название фотографии'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Описание фотографии'
+            }),
+            'is_main': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'order': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 0
+            })
+        }
+
+    def clean_image(self):
+        image = self.cleaned_data.get('image')
+        if image:
+            # Проверяем размер файла (максимум 5MB)
+            if image.size > 5 * 1024 * 1024:
+                raise forms.ValidationError('Размер файла не должен превышать 5MB')
+            
+            # Проверяем тип файла
+            allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+            if image.content_type not in allowed_types:
+                raise forms.ValidationError('Поддерживаются только форматы: JPEG, PNG, GIF')
+        
+        return image
+
+
+class CarImageBulkUploadForm(forms.Form):
+    """Форма для массовой загрузки фотографий"""
+    images = forms.FileField(
+        label='Выберите фотографии',
+        widget=BulkImageUploadWidget(),
+        help_text='Можно выбрать несколько файлов. Поддерживаются форматы: JPEG, PNG, GIF. Максимальный размер каждого файла: 5MB'
+    )
+    
+    title_prefix = forms.CharField(
+        label='Префикс названия',
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Например: Фото 1, Фото 2...'
+        }),
+        help_text='Будет добавлен к названию каждой фотографии'
+    )
+    
+    is_main_first = forms.BooleanField(
+        label='Сделать первое фото главным',
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
+    )
+
+    def clean_images(self):
+        images = self.files.getlist('images')
+        if not images:
+            raise forms.ValidationError('Выберите хотя бы одну фотографию')
+        
+        cleaned_images = []
+        for image in images:
+            # Проверяем размер файла
+            if image.size > 5 * 1024 * 1024:
+                raise forms.ValidationError(f'Файл {image.name} превышает размер 5MB')
+            
+            # Проверяем тип файла
+            allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+            if image.content_type not in allowed_types:
+                raise forms.ValidationError(f'Файл {image.name} имеет неподдерживаемый формат')
+            
+            cleaned_images.append(image)
+        
+        return cleaned_images
+
+
+class CarImageEditForm(forms.ModelForm):
+    """Форма для редактирования фотографии"""
+    class Meta:
+        model = CarImage
+        fields = ['title', 'description', 'is_main', 'is_active', 'order']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Название фотографии'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Описание фотографии'
+            }),
+            'is_main': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'order': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 0
+            })
+        } 

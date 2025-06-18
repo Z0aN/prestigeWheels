@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Car, Booking, CarService, Review
+from .models import Car, Booking, CarService, Review, CarImage
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Avg, Count, Prefetch, Min, Max
@@ -7,7 +7,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import UserProfileForm, PasswordChangeCustomForm, BookingForm, ReviewForm
+from .forms import UserProfileForm, PasswordChangeCustomForm, BookingForm, ReviewForm, CarImageUploadForm, CarImageBulkUploadForm, CarImageEditForm
 from django.contrib.auth import update_session_auth_hash
 from django.urls import reverse
 from django.http import JsonResponse
@@ -312,3 +312,157 @@ def delete_review(request, review_id):
 
 def about(request):
     return render(request, 'rental/about.html')
+
+@login_required
+def car_image_upload(request, car_id):
+    """Загрузка одной фотографии автомобиля с drag&drop"""
+    car = get_object_or_404(Car, id=car_id)
+    
+    if request.method == 'POST':
+        # Проверяем, есть ли AJAX запрос для drag&drop
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            form = CarImageUploadForm(request.POST, request.FILES)
+            if form.is_valid():
+                car_image = form.save(commit=False)
+                car_image.car = car
+                car_image.save()
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Фотография успешно загружена!',
+                    'image_id': car_image.id,
+                    'image_url': car_image.image.url,
+                    'image_title': car_image.title
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'errors': form.errors
+                })
+        else:
+            # Обычная форма
+            form = CarImageUploadForm(request.POST, request.FILES)
+            if form.is_valid():
+                car_image = form.save(commit=False)
+                car_image.car = car
+                car_image.save()
+                
+                messages.success(request, 'Фотография успешно загружена')
+                return redirect('car_image_gallery', car_id=car_id)
+    else:
+        form = CarImageUploadForm()
+    
+    return render(request, 'rental/car_image_upload.html', {
+        'form': form,
+        'car': car
+    })
+
+
+@login_required
+def car_image_bulk_upload(request, car_id):
+    """Массовая загрузка фотографий автомобиля"""
+    car = get_object_or_404(Car, id=car_id)
+    
+    if request.method == 'POST':
+        form = CarImageBulkUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            images = request.FILES.getlist('images')
+            title_prefix = form.cleaned_data.get('title_prefix', '')
+            is_main_first = form.cleaned_data.get('is_main_first', False)
+            
+            uploaded_count = 0
+            for i, image in enumerate(images):
+                car_image = CarImage(
+                    car=car,
+                    image=image,
+                    title=f"{title_prefix} {i+1}" if title_prefix else f"Фото {i+1}",
+                    is_main=is_main_first and i == 0,  # Первое фото главное, если отмечено
+                    order=i
+                )
+                car_image.save()
+                uploaded_count += 1
+            
+            messages.success(request, f'Успешно загружено {uploaded_count} фотографий')
+            return redirect('car_image_gallery', car_id=car_id)
+    else:
+        form = CarImageBulkUploadForm()
+    
+    return render(request, 'rental/car_image_bulk_upload.html', {
+        'form': form,
+        'car': car
+    })
+
+
+@login_required
+def car_image_gallery(request, car_id):
+    """Галерея фотографий автомобиля"""
+    car = get_object_or_404(Car, id=car_id)
+    images = car.carimage_set.all().order_by('order', 'created_at')
+    
+    return render(request, 'rental/car_image_gallery.html', {
+        'car': car,
+        'images': images
+    })
+
+
+@login_required
+def car_image_edit(request, image_id):
+    """Редактирование фотографии"""
+    car_image = get_object_or_404(CarImage, id=image_id)
+    
+    if request.method == 'POST':
+        form = CarImageEditForm(request.POST, instance=car_image)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Фотография успешно обновлена')
+            return redirect('car_image_gallery', car_id=car_image.car.id)
+    else:
+        form = CarImageEditForm(instance=car_image)
+    
+    return render(request, 'rental/car_image_edit.html', {
+        'form': form,
+        'car_image': car_image,
+        'car': car_image.car
+    })
+
+
+@login_required
+def car_image_delete(request, image_id):
+    """Удаление фотографии"""
+    car_image = get_object_or_404(CarImage, id=image_id)
+    car_id = car_image.car.id
+    
+    if request.method == 'POST':
+        car_image.delete()
+        messages.success(request, 'Фотография успешно удалена')
+        return redirect('car_image_gallery', car_id=car_id)
+    
+    return render(request, 'rental/car_image_delete.html', {
+        'car_image': car_image,
+        'car': car_image.car
+    })
+
+
+@login_required
+def car_image_reorder(request, car_id):
+    """Изменение порядка фотографий"""
+    car = get_object_or_404(Car, id=car_id)
+    
+    if request.method == 'POST':
+        image_orders = request.POST.getlist('image_order')
+        
+        for i, image_id in enumerate(image_orders):
+            try:
+                car_image = CarImage.objects.get(id=image_id, car=car)
+                car_image.order = i
+                car_image.save()
+            except CarImage.DoesNotExist:
+                continue
+        
+        messages.success(request, 'Порядок фотографий обновлен')
+        return JsonResponse({'success': True})
+    
+    images = car.carimage_set.all().order_by('order', 'created_at')
+    return render(request, 'rental/car_image_reorder.html', {
+        'car': car,
+        'images': images
+    })

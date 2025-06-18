@@ -1,15 +1,17 @@
 from rest_framework import generics, status, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import Car, Service, Booking, Review
+from .models import Car, Service, Booking, Review, CarImage
 from .serializers import (
     CarSerializer, ServiceSerializer, BookingSerializer, 
     ReviewSerializer, PublicReviewSerializer, UserSerializer, UserRegistrationSerializer, PasswordChangeSerializer
 )
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.shortcuts import get_object_or_404
 
 
 class CarListView(generics.ListAPIView):
@@ -306,4 +308,217 @@ def change_password(request):
         request.user.set_password(new_password)
         request.user.save()
         return Response({"message": "Пароль успешно изменен"})
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+@permission_classes([permissions.IsAdminUser])
+def upload_car_image(request, car_id):
+    """Загрузка одной фотографии автомобиля через API с drag&drop поддержкой"""
+    car = get_object_or_404(Car, id=car_id)
+    
+    if 'image' not in request.FILES:
+        return Response({'error': 'Файл не найден'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    image_file = request.FILES['image']
+    title = request.data.get('title', image_file.name.split('.')[0])  # Используем имя файла как название по умолчанию
+    description = request.data.get('description', '')
+    is_main = request.data.get('is_main', 'false').lower() == 'true'
+    is_active = request.data.get('is_active', 'true').lower() == 'true'
+    
+    # Преобразуем order в число
+    try:
+        order = int(request.data.get('order', 0))
+    except (ValueError, TypeError):
+        order = 0
+    
+    # Проверяем размер файла (максимум 5MB)
+    if image_file.size > 5 * 1024 * 1024:
+        return Response({
+            'success': False,
+            'errors': {'image': ['Размер файла не должен превышать 5MB']}
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Проверяем тип файла
+    allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+    if image_file.content_type not in allowed_types:
+        return Response({
+            'success': False,
+            'errors': {'image': ['Поддерживаются только форматы: JPEG, PNG, GIF']}
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Если устанавливаем как главное фото, убираем главный статус у других
+        if is_main:
+            CarImage.objects.filter(car=car, is_main=True).update(is_main=False)
+        
+        car_image = CarImage.objects.create(
+            car=car,
+            image=image_file,
+            title=title,
+            description=description,
+            is_main=is_main,
+            is_active=is_active,
+            order=order
+        )
+        
+        return Response({
+            'success': True,
+            'message': 'Фотография успешно загружена!',
+            'image_id': car_image.id,
+            'image_url': request.build_absolute_uri(car_image.image.url),
+            'image_title': car_image.title,
+            'is_main': car_image.is_main
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'errors': {'image': [str(e)]}
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+@permission_classes([permissions.IsAdminUser])
+def upload_car_images_bulk(request, car_id):
+    """Массовая загрузка фотографий автомобиля через API"""
+    car = get_object_or_404(Car, id=car_id)
+    
+    images = request.FILES.getlist('images')
+    if not images:
+        return Response({'error': 'Файлы не найдены'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    title_prefix = request.data.get('title_prefix', '')
+    is_main_first = request.data.get('is_main_first', False)
+    
+    uploaded_images = []
+    errors = []
+    
+    for i, image_file in enumerate(images):
+        # Проверяем размер файла
+        if image_file.size > 5 * 1024 * 1024:
+            errors.append(f'Файл {image_file.name} превышает размер 5MB')
+            continue
+        
+        # Проверяем тип файла
+        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+        if image_file.content_type not in allowed_types:
+            errors.append(f'Файл {image_file.name} имеет неподдерживаемый формат')
+            continue
+        
+        try:
+            car_image = CarImage.objects.create(
+                car=car,
+                image=image_file,
+                title=f"{title_prefix} {i+1}" if title_prefix else f"Фото {i+1}",
+                is_main=is_main_first and i == 0,
+                order=i
+            )
+            
+            uploaded_images.append({
+                'id': car_image.id,
+                'title': car_image.title,
+                'url': request.build_absolute_uri(car_image.image.url),
+                'is_main': car_image.is_main
+            })
+            
+        except Exception as e:
+            errors.append(f'Ошибка при загрузке {image_file.name}: {str(e)}')
+    
+    response_data = {
+        'uploaded_count': len(uploaded_images),
+        'uploaded_images': uploaded_images
+    }
+    
+    if errors:
+        response_data['errors'] = errors
+    
+    if uploaded_images:
+        return Response(response_data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def car_images(request, car_id):
+    """Получение всех фотографий автомобиля"""
+    car = get_object_or_404(Car, id=car_id)
+    images = car.carimage_set.filter(is_active=True).order_by('order', 'created_at')
+    
+    image_data = []
+    for image in images:
+        image_data.append({
+            'id': image.id,
+            'title': image.title,
+            'description': image.description,
+            'image_url': request.build_absolute_uri(image.image.url),
+            'is_main': image.is_main,
+            'order': image.order,
+            'created_at': image.created_at
+        })
+    
+    return Response({
+        'car_id': car_id,
+        'car_name': f"{car.brand} {car.name}",
+        'images': image_data
+    })
+
+
+@api_view(['PUT', 'DELETE'])
+@permission_classes([permissions.IsAdminUser])
+def car_image_detail(request, image_id):
+    """Редактирование или удаление фотографии"""
+    car_image = get_object_or_404(CarImage, id=image_id)
+    
+    if request.method == 'PUT':
+        # Обновление метаданных фотографии
+        title = request.data.get('title', car_image.title)
+        description = request.data.get('description', car_image.description)
+        is_main = request.data.get('is_main', car_image.is_main)
+        is_active = request.data.get('is_active', car_image.is_active)
+        order = request.data.get('order', car_image.order)
+        
+        car_image.title = title
+        car_image.description = description
+        car_image.is_main = is_main
+        car_image.is_active = is_active
+        car_image.order = order
+        car_image.save()
+        
+        return Response({
+            'message': 'Фотография успешно обновлена',
+            'image_id': car_image.id,
+            'title': car_image.title
+        })
+    
+    elif request.method == 'DELETE':
+        car_image.delete()
+        return Response({'message': 'Фотография успешно удалена'})
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAdminUser])
+def reorder_car_images(request, car_id):
+    """Изменение порядка фотографий"""
+    car = get_object_or_404(Car, id=car_id)
+    image_orders = request.data.get('image_orders', [])
+    
+    if not image_orders:
+        return Response({'error': 'Не указан порядок изображений'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    updated_count = 0
+    for i, image_id in enumerate(image_orders):
+        try:
+            car_image = CarImage.objects.get(id=image_id, car=car)
+            car_image.order = i
+            car_image.save()
+            updated_count += 1
+        except CarImage.DoesNotExist:
+            continue
+    
+    return Response({
+        'message': f'Порядок {updated_count} фотографий обновлен'
+    }) 

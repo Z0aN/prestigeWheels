@@ -28,4 +28,11 @@ urlpatterns = [
     path('auth/logout/', api_views.logout_user, name='api-logout'),
     path('auth/profile/', api_views.user_profile, name='api-profile'),
     path('auth/change-password/', api_views.change_password, name='api-change-password'),
+    
+    # New URLs for photo work
+    path('cars/<int:car_id>/upload-image/', api_views.upload_car_image, name='upload-car-image'),
+    path('cars/<int:car_id>/upload-images/', api_views.upload_car_images_bulk, name='upload-car-images-bulk'),
+    path('cars/<int:car_id>/images/', api_views.car_images, name='car-images'),
+    path('car-images/<int:image_id>/', api_views.car_image_detail, name='car-image-detail'),
+    path('cars/<int:car_id>/reorder-images/', api_views.reorder_car_images, name='reorder-car-images'),
 ] 

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Демонстрация Drag&Drop загрузки изображений - Prestige Wheels</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .demo-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 2rem;
+            margin: 2rem auto;
+            max-width: 1000px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .demo-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .location-box {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .admin-preview {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            background: white;
+            margin: 1rem 0;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        .usage-steps {
+            counter-reset: step-counter;
+        }
+
+        .usage-step {
+            counter-increment: step-counter;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border-left: 4px solid #667eea;
+            background: white;
+            border-radius: 0 8px 8px 0;
+            position: relative;
+        }
+
+        .usage-step::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: -15px;
+            top: 1rem;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin: 0.2rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="demo-container">
+            <!-- Заголовок -->
+            <div class="header">
+                <h1><i class="fas fa-cloud-upload-alt"></i> Drag & Drop Upload</h1>
+                <p class="lead">Современная система загрузки изображений для Django Admin</p>
+                <div>
+                    <span class="tag">Django</span>
+                    <span class="tag">Drag & Drop</span>
+                    <span class="tag">Image Upload</span>
+                    <span class="tag">Admin Interface</span>
+                </div>
+            </div>
+
+            <!-- Особенности -->
+            <div class="demo-section">
+                <h3><i class="fas fa-star"></i> Реализованные возможности</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mouse-pointer"></i>
+                        </div>
+                        <h5>Drag & Drop</h5>
+                        <p>Перетаскивание файлов мышью прямо в зону загрузки</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <h5>Предпросмотр</h5>
+                        <p>Мгновенное отображение выбранного изображения</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h5>Валидация</h5>
+                        <p>Проверка размера файла и типа изображения</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h5>Адаптивность</h5>
+                        <p>Корректная работа на всех устройствах</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h5>Интеграция</h5>
+                        <p>Полная интеграция с Django Admin</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <h5>Массовая загрузка</h5>
+                        <p>Возможность загружать несколько файлов одновременно</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Где находится -->
+            <div class="demo-section">
+                <h3><i class="fas fa-map-marker-alt"></i> Где найти функциональность</h3>
+                
+                <div class="location-box">
+                    <h5><i class="fas fa-cog"></i> В Django Admin панели:</h5>
+                    <ul class="mb-0">
+                        <li><strong>Cars</strong> → Редактирование автомобиля → Inline секция "Car images"</li>
+                        <li><strong>Car images</strong> → Добавить/редактировать изображение</li>
+                        <li><strong>Массовая загрузка</strong> → Actions в списке автомобилей</li>
+                    </ul>
+                </div>
+
+                <div class="location-box" style="background: linear-gradient(45deg, #17a2b8, #6f42c1);">
+                    <h5><i class="fas fa-code"></i> В API endpoints:</h5>
+                    <ul class="mb-0">
+                        <li><code>POST /api/cars/{id}/upload-image/</code> - одиночная загрузка</li>
+                        <li><code>POST /api/cars/{id}/upload-images/</code> - массовая загрузка</li>
+                        <li><code>GET /api/cars/{id}/images/</code> - получить изображения</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Инструкция по использованию -->
+            <div class="demo-section">
+                <h3><i class="fas fa-book"></i> Как использовать</h3>
+                
+                <div class="usage-steps">
+                    <div class="usage-step">
+                        <h6><strong>Войдите в Django Admin</strong></h6>
+                        <p>Перейдите по адресу <code>/admin/</code> и войдите с правами администратора</p>
+                    </div>
+
+                    <div class="usage-step">
+                        <h6><strong>Откройте раздел Cars</strong></h6>
+                        <p>Выберите автомобиль для редактирования или создайте новый</p>
+                    </div>
+
+                    <div class="usage-step">
+                        <h6><strong>Найдите секцию Car images</strong></h6>
+                        <p>Прокрутите вниз до inline секции с фотографиями автомобиля</p>
+                    </div>
+
+                    <div class="usage-step">
+                        <h6><strong>Используйте Drag & Drop</strong></h6>
+                        <p>Перетащите изображение в специальную зону или нажмите для выбора файла</p>
+                    </div>
+
+                    <div class="usage-step">
+                        <h6><strong>Заполните метаданные</strong></h6>
+                        <p>Добавьте название, описание, настройте порядок отображения</p>
+                    </div>
+
+                    <div class="usage-step">
+                        <h6><strong>Сохраните изменения</strong></h6>
+                        <p>Нажмите "Save" для сохранения всех изменений</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Технические детали -->
+            <div class="demo-section">
+                <h3><i class="fas fa-wrench"></i> Технические детали</h3>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Файловые ограничения:</h5>
+                        <ul>
+                            <li>Максимальный размер: <strong>5MB</strong></li>
+                            <li>Форматы: <strong>JPEG, PNG, GIF</strong></li>
+                            <li>Автоматическое изменение размера</li>
+                            <li>Валидация на стороне клиента и сервера</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Технологии:</h5>
+                        <ul>
+                            <li><strong>JavaScript</strong> - обработка событий</li>
+                            <li><strong>CSS3</strong> - стили и анимации</li>
+                            <li><strong>Django Forms</strong> - валидация</li>
+                            <li><strong>HTML5 File API</strong> - работа с файлами</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="admin-preview">
+                    <h6><i class="fas fa-desktop"></i> Превью интерфейса админки:</h6>
+                    <div style="border: 1px dashed #ccc; padding: 20px; text-align: center; color: #666; background: #f8f9fa;">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: #007bff;"></i><br>
+                        <strong>Перетащите изображение сюда или нажмите для выбора</strong><br>
+                        <small>Поддерживаются: JPEG, PNG, GIF (до 5MB)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Структура файлов -->
+            <div class="demo-section">
+                <h3><i class="fas fa-folder"></i> Структура проекта</h3>
+                
+                <div class="code-block">
+backend/
+├── static/
+│   ├── css/
+│   │   └── carimage_admin.css    # Стили для drag&drop
+│   └── js/
+│       └── carimage_admin.js     # JavaScript функциональность
+├── rental/
+│   ├── widgets.py                # Кастомные виджеты Django
+│   ├── forms.py                  # Формы с новыми виджетами  
+│   ├── admin.py                  # Админка с drag&drop
+│   └── api_views.py              # API для загрузки
+└── templates/
+    └── rental/
+        └── car_image_upload_dragdrop.html    # Демо страница
+                </div>
+            </div>
+
+            <!-- Дополнительные возможности -->
+            <div class="demo-section">
+                <h3><i class="fas fa-plus-circle"></i> Дополнительные возможности</h3>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h6><i class="fas fa-sort"></i> Сортировка изображений</h6>
+                            <p>Изменение порядка отображения фотографий в галерее</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h6><i class="fas fa-star"></i> Главное изображение</h6>
+                            <p>Назначение основной фотографии для автомобиля</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h6><i class="fas fa-eye-slash"></i> Активность</h6>
+                            <p>Включение/отключение отображения изображений</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card">
+                            <h6><i class="fas fa-edit"></i> Метаданные</h6>
+                            <p>Редактирование названий и описаний фотографий</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопки -->
+            <div class="text-center">
+                <a href="/admin/" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-cog"></i> Открыть Admin панель
+                </a>
+                <a href="/admin/rental/car/" class="btn btn-success btn-lg">
+                    <i class="fas fa-car"></i> Управление автомобилями
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

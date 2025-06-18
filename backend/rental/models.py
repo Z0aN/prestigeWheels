@@ -71,6 +71,17 @@ class Car(models.Model):
             return 5   # 5% скидка для аренды от 3 дней
         return 0
 
+    def get_gallery_images(self):
+        """Получить все изображения из галереи"""
+        return self.carimage_set.filter(is_active=True).order_by('order', 'created_at')
+
+    def get_main_image(self):
+        """Получить главное изображение (первое из галереи или основное)"""
+        gallery_image = self.carimage_set.filter(is_active=True, is_main=True).first()
+        if gallery_image:
+            return gallery_image.image
+        return self.image
+
 class CarService(models.Model):
     car = models.ForeignKey(Car, on_delete=models.CASCADE, verbose_name="Автомобиль")
     service = models.ForeignKey(Service, on_delete=models.CASCADE, verbose_name="Услуга")
@@ -252,4 +263,36 @@ class Review(models.Model):
         car.average_rating = avg_rating or 0
         car.total_reviews = total_reviews
         car.save(update_fields=['average_rating', 'total_reviews'])
+
+class CarImage(models.Model):
+    """Модель для галереи фотографий автомобилей"""
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, verbose_name="Автомобиль")
+    image = models.ImageField("Фотография", upload_to="cars/gallery/")
+    title = models.CharField("Название", max_length=200, blank=True, help_text="Краткое описание фотографии")
+    description = models.TextField("Описание", blank=True, help_text="Подробное описание фотографии")
+    is_main = models.BooleanField("Главное фото", default=False, help_text="Использовать как основное изображение автомобиля")
+    is_active = models.BooleanField("Активно", default=True, help_text="Показывать в галерее")
+    order = models.PositiveIntegerField("Порядок", default=0, help_text="Порядок отображения в галерее")
+    created_at = models.DateTimeField("Дата создания", auto_now_add=True)
+    updated_at = models.DateTimeField("Дата обновления", auto_now=True)
+
+    class Meta:
+        verbose_name = "Фотография автомобиля"
+        verbose_name_plural = "Фотографии автомобилей"
+        ordering = ['order', 'created_at']
+
+    def __str__(self):
+        return f"{self.car} - {self.title or 'Фото'}"
+
+    def save(self, *args, **kwargs):
+        # Если это главное фото, убираем главный статус у других фото этого автомобиля
+        if self.is_main:
+            CarImage.objects.filter(car=self.car, is_main=True).exclude(pk=self.pk).update(is_main=False)
+        super().save(*args, **kwargs)
+
+    def get_image_url(self):
+        """Получить URL изображения"""
+        if self.image:
+            return self.image.url
+        return None
 
