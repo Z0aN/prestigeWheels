@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './Header.module.css';
+import { useTranslation } from 'react-i18next';
 
 const Header: React.FC = () => {
   const { user, logout, isLoading } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const langMenuRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = async () => {
     try {
@@ -16,6 +19,17 @@ const Header: React.FC = () => {
       console.error('Logout error:', error);
     }
   };
+
+  // Закрытие меню при клике вне
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+        setLangMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (isLoading) {
     return (
@@ -30,26 +44,22 @@ const Header: React.FC = () => {
   }
 
   return (
-    <header className={styles.header} role="banner">
+    <header className={styles.header}>
       <div className={styles.container}>
-        <Link to="/" className={styles.logo}>
-          <h1>Prestige Wheels</h1>
-        </Link>
-
-        <nav className={`${styles.nav} ${isMenuOpen ? styles.navOpen : ''}`} role="navigation" aria-label="Основное меню">
-          <Link to="/" className={styles.navLink}>
-            Главная
+        <div className={styles.left}>
+          <Link to="/" className={styles.logo}>
+            <h1>{t('header.logo')}</h1>
           </Link>
-          <Link to="/about" className={styles.navLink}>
-            О нас
-          </Link>
-          <Link to="/cars" className={styles.navLink}>
-            Автомобили
-          </Link>
-          
-          {user ? (
-            <div className={styles.userMenu} role="menu">
-              <div className={styles.userProfile} role="menuitem">
+        </div>
+        <div className={styles.right}>
+          <nav className={styles.nav}>
+            <Link to="/" className={styles.navLink}>{t('header.home')}</Link>
+            <Link to="/about" className={styles.navLink}>{t('header.about')}</Link>
+            <Link to="/cars" className={styles.navLink}>{t('header.cars')}</Link>
+          </nav>
+          <div className={styles.userMenu}>
+            {user ? (
+              <div className={styles.userProfile}>
                 <div className={styles.userAvatar} aria-hidden="true">
                   {(user.first_name?.[0] || user.username?.[0] || 'U').toUpperCase()}
                 </div>
@@ -66,7 +76,7 @@ const Header: React.FC = () => {
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                         <circle cx="12" cy="7" r="4"/>
                       </svg>
-                      Мой профиль
+                      {t('header.myProfile')}
                     </Link>
                     {user.is_superuser && (
                       <a 
@@ -78,7 +88,7 @@ const Header: React.FC = () => {
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M12 1l3 9h9l-7 5.5 3 9-8-6-8 6 3-9-7-5.5h9z"/>
                       </svg>
-                        Админ-панель
+                        {t('header.adminPanel')}
                       </a>
                     )}
                     <div className={styles.dropdownDivider}></div>
@@ -88,35 +98,41 @@ const Header: React.FC = () => {
                         <polyline points="16,17 21,12 16,7"/>
                         <line x1="21" y1="12" x2="9" y2="12"/>
                       </svg>
-                      Выйти
+                      {t('logout')}
                     </button>
                   </div>
                 </div>
               </div>
+            ) : (
+              <div className={styles.authLinks}>
+                <Link to="/login" className={styles.navLink} role="menuitem">
+                  {t('login')}
+                </Link>
+                <Link to="/register" className={styles.registerBtn} role="menuitem">
+                  {t('header.register')}
+                </Link>
+              </div>
+            )}
+            <div className={styles.languageSwitcher} ref={langMenuRef}>
+              <button onClick={() => setLangMenuOpen((v) => !v)} aria-label={t('chooseLanguage')}>
+                {i18n.language === 'en' ? 'EN' : 'RU'}
+                <span style={{display: 'inline-block', transition: 'transform 0.2s', transform: langMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)'}}>
+                  ▼
+                </span>
+              </button>
+              {langMenuOpen && (
+                <div className={styles.languageDropdown}>
+                  <button onClick={() => { i18n.changeLanguage('ru'); setLangMenuOpen(false); }} disabled={i18n.language === 'ru'}>
+                    Русский
+                  </button>
+                  <button onClick={() => { i18n.changeLanguage('en'); setLangMenuOpen(false); }} disabled={i18n.language === 'en'}>
+                    English
+                  </button>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className={styles.authLinks} role="menu">
-              <Link to="/login" className={styles.navLink} role="menuitem">
-                Войти
-              </Link>
-              <Link to="/register" className={styles.registerBtn} role="menuitem">
-                Регистрация
-              </Link>
-            </div>
-          )}
-        </nav>
-
-        <button
-          className={styles.mobileMenuBtn}
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label={isMenuOpen ? "Закрыть меню" : "Открыть меню"}
-          aria-expanded={isMenuOpen}
-          aria-controls="main-menu"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
+          </div>
+        </div>
       </div>
     </header>
   );

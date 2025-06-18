@@ -9,11 +9,13 @@ import ReviewForm from '../../components/ReviewForm/ReviewForm';
 import styles from './CarDetailPage.module.css';
 import globalStyles from '../../styles/globals.module.css';
 import { Rating } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 const CarDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { t, i18n } = useTranslation();
   
   const [reviews, setReviews] = useState<Review[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +74,7 @@ const CarDetailPage: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
+    return new Date(dateString).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ru-RU', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -106,7 +108,7 @@ const CarDetailPage: React.FC = () => {
         <div className={globalStyles.container}>
           <div className={styles.loading}>
             <div className={styles.loadingSpinner}></div>
-            <p>Загрузка информации об автомобиле...</p>
+            <p>{t('carDetail.loading')}</p>
           </div>
         </div>
       </div>
@@ -118,10 +120,10 @@ const CarDetailPage: React.FC = () => {
       <div className={styles.carDetailPage}>
         <div className={globalStyles.container}>
           <div className={styles.error}>
-            <h1>Ошибка загрузки</h1>
-          <p>{carError?.message || error}</p>
+            <h1>{t('carDetail.loadErrorTitle')}</h1>
+            <p>{carError?.message || error}</p>
             <Link to="/cars" className={styles.backButton}>
-              Вернуться к каталогу
+              {t('carDetail.backToCatalog')}
             </Link>
           </div>
         </div>
@@ -134,10 +136,10 @@ const CarDetailPage: React.FC = () => {
       <div className={styles.carDetailPage}>
         <div className={globalStyles.container}>
           <div className={styles.error}>
-            <h1>Автомобиль не найден</h1>
-            <p>Запрашиваемый автомобиль не существует или был удален</p>
+            <h1>{t('carDetail.notFoundTitle')}</h1>
+            <p>{t('carDetail.notFoundText')}</p>
             <Link to="/cars" className={styles.backButton}>
-              Вернуться к каталогу
+              {t('carDetail.backToCatalog')}
             </Link>
           </div>
         </div>
@@ -146,16 +148,18 @@ const CarDetailPage: React.FC = () => {
   }
 
   // Создаем массив изображений (основное + дополнительные, если есть)
-  const images = car.image_url || car.image ? [car.image_url || car.image] : ['/api/placeholder/800/600'];
+  const images = car.image_url ? [car.image_url as string] : car.image ? [car.image as string] : ['/api/placeholder/800/600'];
+  // Исправление типов для image_url и document_url
+  const documentUrl = car.document_url ?? undefined;
 
   return (
     <div className={styles.carDetailPage}>
       <div className={globalStyles.container}>
         {/* Breadcrumbs */}
         <nav className={styles.breadcrumbs}>
-          <Link to="/">Главная</Link>
+          <Link to="/">{t('carDetail.breadcrumbs.home')}</Link>
           <span>/</span>
-          <Link to="/cars">Каталог</Link>
+          <Link to="/cars">{t('carDetail.breadcrumbs.catalog')}</Link>
           <span>/</span>
           <span>{car.brand} {car.name}</span>
         </nav>
@@ -174,7 +178,7 @@ const CarDetailPage: React.FC = () => {
               />
               {!car.is_available && (
                 <div className={styles.unavailableBadge}>
-                  Недоступен
+                  {t('carDetail.unavailable')}
                 </div>
               )}
             </div>
@@ -192,6 +196,28 @@ const CarDetailPage: React.FC = () => {
                 ))}
               </div>
             )}
+              {/* Отображение документа, если есть */}
+              {documentUrl ? (
+                <div className={styles.carDocument}>
+                  <a href={documentUrl} target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6 2C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8.82843C20 8.29799 19.7893 7.78929 19.4142 7.41421L15.5858 3.58579C15.2107 3.21071 14.702 3 14.1716 3H6ZM6 4H13V8C13 9.10457 13.8954 10 15 10H19V20C19 20.5523 18.5523 21 18 21H6C5.44772 21 5 20.5523 5 20V4C5 3.44772 5.44772 3 6 3V4ZM14 4.41421L18.5858 9H15C14.4477 9 14 8.55228 14 8V4.41421Z" fill="currentColor"/>
+                    </svg>
+                    {t('carDetail.document')}
+                  </a>
+                </div>
+              ) : null}
+              {/* Отображение видео/материала, если есть */}
+              {car.video_url && (
+                <div className={styles.carVideo}>
+                  <a href={car.video_url} target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{verticalAlign: 'middle'}}>
+                      <path d="M17 10.5V7C17 5.89543 16.1046 5 15 5H5C3.89543 5 3 5.89543 3 7V17C3 18.1046 3.89543 19 5 19H15C16.1046 19 17 18.1046 17 17V13.5L21 17V7L17 10.5Z" fill="#6366f1"/>
+                    </svg>
+                    {t('carDetail.video')}
+                  </a>
+                </div>
+              )}
           </div>
 
           {/* Правая колонка - информация */}
@@ -213,18 +239,18 @@ const CarDetailPage: React.FC = () => {
                 ))}
               </div>
               <span className={styles.ratingText}>
-                {Number(car.average_rating || 0).toFixed(1)} ({car.total_reviews || 0} отзывов)
+                {Number(car.average_rating || 0).toFixed(1)} ({Number(car.total_reviews || 0)} {t('carDetail.reviews', { count: Number(car.total_reviews || 0) })})
               </span>
             </div>
 
             <div className={styles.price}>
               <span className={styles.priceAmount}>{formatPrice(car.price)}</span>
-              <span className={styles.priceUnit}>/ сутки</span>
+              <span className={styles.priceUnit}>{t('carDetail.pricePerDay')}</span>
             </div>
 
             {/* Система скидок */}
             <div className={styles.discounts}>
-              <h3>Система скидок</h3>
+              <h3>{t('carDetail.discountsTitle')}</h3>
               <div className={styles.discountList}>
                 {[
                   { days: 3, percentage: 5 },
@@ -233,7 +259,7 @@ const CarDetailPage: React.FC = () => {
                   { days: 30, percentage: 20 }
                 ].map((discount) => (
                   <div key={discount.days} className={styles.discountItem}>
-                    <span>От {discount.days} дней</span>
+                    <span>{t('carDetail.discountFromDays', { days: discount.days })}</span>
                     <span className={styles.discountPercentage}>-{discount.percentage}%</span>
                   </div>
                 ))}
@@ -243,7 +269,7 @@ const CarDetailPage: React.FC = () => {
             {/* Дополнительные услуги */}
             {car.services && car.services.length > 0 && (
               <div className={styles.services}>
-                <h3>Дополнительные услуги</h3>
+                <h3>{t('carDetail.servicesTitle')}</h3>
                 <div className={styles.servicesList}>
                   {car.services.map((service) => (
                     <div key={service.id} className={styles.serviceItem}>
@@ -251,7 +277,7 @@ const CarDetailPage: React.FC = () => {
                         <span className={styles.serviceName}>
                           {service.service.name}
                           {service.is_required && (
-                            <span className={styles.requiredBadge}>обязательно</span>
+                            <span className={styles.requiredBadge}>{t('carDetail.required')}</span>
                           )}
                         </span>
                         {service.notes && (
@@ -274,46 +300,47 @@ const CarDetailPage: React.FC = () => {
                 onClick={handleBookingClick}
                 disabled={!car.is_available}
               >
-                {car.is_available ? 'Забронировать' : 'Недоступен для бронирования'}
+                {car.is_available ? t('carDetail.bookBtn') : t('carDetail.unavailableForBooking')}
               </button>
               {!isAuthenticated && (
                 <p className={styles.authNote}>
-                  Для бронирования необходимо <Link to="/login">войти в систему</Link>
+                  {t('carDetail.authNote', { login: `<a href='/login'>${t('carDetail.login')}</a>` })}
                 </p>
               )}
             </div>
+
           </div>
         </div>
 
         {/* Отзывы */}
         <div className={styles.reviewsSection}>
           <div className={styles.reviewsHeader}>
-          <h2>Отзывы клиентов</h2>
+          <h2>{t('carDetail.reviewsTitle')}</h2>
             {isAuthenticated && canReview?.can_review && !showReviewForm && (
               <button 
                 className={styles.addReviewButton}
                 onClick={handleShowReviewForm}
               >
-                Добавить отзыв
+                {t('carDetail.addReviewBtn')}
               </button>
             )}
           </div>
 
           {isAuthenticated && !canReview?.can_review && !canReview?.has_review && canReview?.has_booking === false && (
             <div className={styles.reviewHint}>
-              <p>Чтобы оставить отзыв, вам необходимо сначала арендовать этот автомобиль.</p>
+              <p>{t('carDetail.needBookingToReview')}</p>
             </div>
           )}
 
           {isAuthenticated && canReview?.has_review && (
             <div className={styles.reviewHint}>
-              <p>Вы уже оставили отзыв для этого автомобиля.</p>
+              <p>{t('carDetail.alreadyReviewed')}</p>
             </div>
           )}
 
           {!isAuthenticated && (
             <div className={styles.reviewHint}>
-              <p><Link to="/login">Войдите в систему</Link>, чтобы оставить отзыв.</p>
+              <p><Link to="/login">{t('carDetail.loginToReview')}</Link></p>
             </div>
           )}
 
@@ -334,7 +361,7 @@ const CarDetailPage: React.FC = () => {
                       <span className={styles.reviewAuthor}>
                         {review.booking?.user?.first_name && review.booking?.user?.last_name
                           ? `${review.booking.user.first_name} ${review.booking.user.last_name}`
-                          : review.booking?.user?.username || 'Анонимный пользователь'}
+                          : review.booking?.user?.username || t('carDetail.anonymousUser')}
                       </span>
                     <div className={styles.reviewRating}>
                       {[1, 2, 3, 4, 5].map((star) => (
@@ -359,21 +386,21 @@ const CarDetailPage: React.FC = () => {
             </div>
           ) : (
             <div className={styles.noReviews}>
-              <p>Пока нет отзывов об этом автомобиле</p>
-              <p>Станьте первым, кто оставит отзыв!</p>
+              <p>{t('carDetail.noReviews')}</p>
+              <p>{t('carDetail.beFirstToReview')}</p>
             </div>
           )}
         </div>
 
         {/* Похожие автомобили */}
         <div className={styles.similarCars}>
-          <h2>Похожие автомобили</h2>
-          <p>Другие автомобили этого бренда или типа</p>
+          <h2>{t('carDetail.similarTitle')}</h2>
+          <p>{t('carDetail.similarSubtitle')}</p>
           
           {similarLoading ? (
             <div className={styles.loading}>
               <div className={styles.loadingSpinner}></div>
-              <p>Загружаем похожие автомобили...</p>
+              <p>{t('carDetail.similarLoading')}</p>
             </div>
           ) : similarCars && similarCars.length > 0 ? (
             <div className={styles.similarCarsGrid}>
@@ -394,7 +421,7 @@ const CarDetailPage: React.FC = () => {
                     />
                     {!similarCar.is_available && (
                       <div className={styles.unavailableBadge}>
-                        Недоступен
+                        {t('carDetail.unavailable')}
                       </div>
                     )}
                     <div className={styles.carBadge}>
@@ -412,26 +439,26 @@ const CarDetailPage: React.FC = () => {
                             size="small"
                           />
                           <span className={styles.reviewsCount}>
-                            {similarCar.total_reviews} отзывов
+                            {t('carDetail.reviews', { count: Number(similarCar.total_reviews || 0) })}
                           </span>
                         </>
                       ) : (
                         <span className={styles.reviewsCount}>
-                          Нет отзывов
+                          {t('carDetail.noReviewsShort')}
                         </span>
                       )}
                     </div>
-                    <p>{formatPrice(similarCar.price)}/сутки</p>
+                    <p>{formatPrice(similarCar.price)}/{t('carDetail.pricePerDayShort')}</p>
                     <button className={styles.viewButton}>
-                      Подробнее
+                      {t('carDetail.moreBtn')}
                     </button>
                   </div>
-          </Link>
+                </Link>
               ))}
             </div>
           ) : (
             <div className={styles.noSimilarCars}>
-              <p>Нет похожих автомобилей</p>
+              <p>{t('carDetail.noSimilarCars')}</p>
             </div>
           )}
         </div>

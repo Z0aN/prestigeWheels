@@ -6,6 +6,8 @@ import { Car } from '../../types';
 import { Button, Rating, Input } from '../../components/UI';
 import styles from './CarsPage.module.css';
 import globalStyles from '../../styles/globals.module.css';
+import { useTranslation } from 'react-i18next';
+import { carTypeTranslations } from '../../data/carTypes';
 
 // Типы для фильтров и сортировки
 type SortOption = 'price' | '-price' | '-average_rating' | 'name' | '-name';
@@ -30,13 +32,15 @@ const CarsPage: React.FC = () => {
 
   const [sortBy, setSortBy] = useState<SortOption>('price');
 
+  const { t, i18n } = useTranslation();
+
   // Опции сортировки (Django формат: поле для возрастания, -поле для убывания)
   const sortOptions = [
-    { value: 'price', label: 'Цена (по возрастанию)' },
-    { value: '-price', label: 'Цена (по убыванию)' },
-    { value: '-average_rating', label: 'По рейтингу' },
-    { value: 'name', label: 'По названию (А-Я)' },
-    { value: '-name', label: 'По названию (Я-А)' }
+    { value: 'price', label: t('cars.sort.priceAsc') },
+    { value: '-price', label: t('cars.sort.priceDesc') },
+    { value: '-average_rating', label: t('cars.sort.rating') },
+    { value: 'name', label: t('cars.sort.nameAsc') },
+    { value: '-name', label: t('cars.sort.nameDesc') }
   ];
 
   // Запрос данных с учетом фильтров и сортировки
@@ -108,8 +112,8 @@ const CarsPage: React.FC = () => {
       <div className={styles.carsPage}>
         <div className="container">
           <div className={styles.error}>
-            <h1>Ошибка загрузки</h1>
-            <p>Не удалось загрузить каталог автомобилей. Попробуйте обновить страницу.</p>
+            <h1>{t('cars.errorTitle')}</h1>
+            <p>{t('cars.errorText')}</p>
           </div>
         </div>
       </div>
@@ -120,8 +124,8 @@ const CarsPage: React.FC = () => {
     <div className={styles.carsPage}>
       <div className={globalStyles.container}>
         <div className={styles.header}>
-          <h1>Каталог автомобилей</h1>
-          <p>Откройте для себя мир роскоши с нашей эксклюзивной коллекцией премиальных автомобилей</p>
+          <h1>{t('cars.title')}</h1>
+          <p>{t('cars.subtitle')}</p>
         </div>
 
         {/* Сортировка вынесена отдельно */}
@@ -145,7 +149,7 @@ const CarsPage: React.FC = () => {
             <div>
               <Input
                 type="text"
-                placeholder="Поиск по названию..."
+                placeholder={t('cars.searchPlaceholder')}
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
                 className={styles.searchInput}
@@ -160,7 +164,7 @@ const CarsPage: React.FC = () => {
                 onChange={(e) => handleFilterChange('brand', e.target.value)}
                 disabled={brandsLoading}
               >
-                <option value="">Все бренды</option>
+                <option value="">{t('cars.allBrands')}</option>
                 {brands?.map(brand => (
                   <option key={brand} value={brand}>
                     {brand}
@@ -176,10 +180,10 @@ const CarsPage: React.FC = () => {
                 onChange={(e) => handleFilterChange('type', e.target.value)}
                 disabled={typesLoading}
               >
-                <option value="">Все типы</option>
+                <option value="">{t('cars.allTypes')}</option>
                 {types?.map(type => (
                   <option key={type} value={type}>
-                    {type}
+                    {carTypeTranslations[type]?.[i18n.language as 'ru' | 'en'] || type}
                   </option>
                 ))}
               </select>
@@ -191,7 +195,7 @@ const CarsPage: React.FC = () => {
             <div>
               <Input
                 type="number"
-                placeholder="Цена от (₽/день)"
+                placeholder={t('cars.priceFrom')}
                 value={filters.minPrice}
                 onChange={(e) => handleFilterChange('minPrice', e.target.value)}
                 fullWidth
@@ -200,14 +204,14 @@ const CarsPage: React.FC = () => {
             <div>
               <Input
                 type="number"
-                placeholder="Цена до (₽/день)"
+                placeholder={t('cars.priceTo')}
                 value={filters.maxPrice}
                 onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
                 fullWidth
               />
             </div>
             <button onClick={handleClearFilters} className={styles.clearFiltersBtn}>
-              Сбросить фильтры
+              {t('cars.clearFilters')}
             </button>
           </div>
         </div>
@@ -215,20 +219,32 @@ const CarsPage: React.FC = () => {
         {isLoading ? (
           <div className={styles.loading}>
             <div className={styles.loadingSpinner}></div>
-            <p>Загружаем коллекцию автомобилей...</p>
+            <p>{t('cars.loading')}</p>
           </div>
         ) : (
           <>
             <div className={styles.resultsInfo}>
-              <p>Найдено {totalCount} {totalCount === 1 ? 'автомобиль' : totalCount < 5 ? 'автомобиля' : 'автомобилей'}</p>
+              {(() => {
+                let foundKey = 'cars.found_many';
+                if (i18n.language === 'en') {
+                  foundKey = totalCount === 1 ? 'cars.found_one' : 'cars.found_other';
+                } else {
+                  if (totalCount % 10 === 1 && totalCount % 100 !== 11) {
+                    foundKey = 'cars.found_one';
+                  } else if ([2, 3, 4].includes(totalCount % 10) && ![12, 13, 14].includes(totalCount % 100)) {
+                    foundKey = 'cars.found_few';
+                  }
+                }
+                return <p>{t(foundKey, { count: totalCount })}</p>;
+              })()}
             </div>
 
             {cars.length === 0 ? (
               <div className={styles.noResults}>
-                <h3>Автомобили не найдены</h3>
-                <p>Попробуйте изменить параметры поиска или сбросить фильтры</p>
+                <h3>{t('cars.notFoundTitle')}</h3>
+                <p>{t('cars.notFoundText')}</p>
                 <button onClick={handleClearFilters}>
-                  Сбросить фильтры
+                  {t('cars.clearFilters')}
                 </button>
               </div>
             ) : (
@@ -244,7 +260,7 @@ const CarsPage: React.FC = () => {
                           target.src = 'https://via.placeholder.com/400x250?text=No+Image';
                         }}
                       />
-                      <div className={styles.carType}>{car.type}</div>
+                      <div className={styles.carType}>{carTypeTranslations[car.type]?.[i18n.language as 'ru' | 'en'] || car.type}</div>
                       {!car.is_available && (
                         <div className={styles.unavailableBadge}>
                           Недоступен
@@ -264,18 +280,18 @@ const CarsPage: React.FC = () => {
                               size="small"
                             />
                             <span className={styles.reviewsCount}>
-                              {car.total_reviews} отзывов
-                        </span>
+                              {car.total_reviews} {t('cars.reviews')}
+                            </span>
                           </>
                         ) : (
                         <span className={styles.reviewsCount}>
-                            Нет отзывов
+                            {t('cars.noReviews')}
                         </span>
                         )}
                       </div>
                       <div className={styles.carPrice}>
                         <span className={styles.price}>{Number(car.price || 0).toLocaleString()} ₽</span>
-                        <span className={styles.period}>/ сутки</span>
+                        <span className={styles.period}>{t('cars.perDay')}</span>
                       </div>
                       <div className={styles.carActions}>
                         <Button 
@@ -287,7 +303,7 @@ const CarsPage: React.FC = () => {
                             navigate(`/cars/${car.id}`);
                           }}
                         >
-                          Подробнее
+                          {t('cars.moreDetails')}
                         </Button>
                         <Button 
                           variant="filled"
@@ -301,7 +317,7 @@ const CarsPage: React.FC = () => {
                             }
                           }}
                         >
-                          {car.is_available ? 'Забронировать' : 'Недоступен'}
+                          {car.is_available ? t('cars.book') : t('cars.unavailable')}
                         </Button>
                       </div>
                     </div>

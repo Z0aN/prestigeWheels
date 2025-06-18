@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { authAPI, bookingsAPI } from '../../services/api';
@@ -6,6 +6,7 @@ import { Booking } from '../../types';
 import styles from './ProfilePage.module.css';
 import globalStyles from '../../styles/globals.module.css';
 import { Button, Input, Card } from '../../components/UI';
+import { useTranslation } from 'react-i18next';
 
 const ProfilePage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -31,6 +32,23 @@ const ProfilePage: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const { t, i18n } = useTranslation();
+
+  const loadBookings = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const bookingsData = await bookingsAPI.getAll();
+      const bookingsArray = Array.isArray(bookingsData)
+        ? bookingsData
+        : (bookingsData as any)?.results || [];
+      setBookings(bookingsArray);
+    } catch (error) {
+      console.error('Error loading bookings:', error);
+      setError(t('profile.errors.loadBookings'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [t]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -54,26 +72,7 @@ const ProfilePage: React.FC = () => {
         email: user.email || ''
       });
     }
-  }, [searchParams, isAuthenticated, navigate, user]);
-
-  const loadBookings = async () => {
-    try {
-      setIsLoading(true);
-      const bookingsData = await bookingsAPI.getAll();
-      
-      // Проверяем, если данные приходят в формате пагинации
-      const bookingsArray = Array.isArray(bookingsData) 
-        ? bookingsData 
-        : (bookingsData as any)?.results || [];
-      
-      setBookings(bookingsArray);
-    } catch (error) {
-      console.error('Error loading bookings:', error);
-      setError('Ошибка загрузки бронирований');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [searchParams, isAuthenticated, navigate, user, loadBookings]);
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,12 +83,12 @@ const ProfilePage: React.FC = () => {
       setIsEditing(false);
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      setError(error.message || 'Ошибка обновления профиля');
+      setError(error.message || t('profile.errors.updateProfile'));
     }
   };
 
   const handleCancelBooking = async (bookingId: number) => {
-    if (!window.confirm('Вы уверены, что хотите отменить это бронирование?')) {
+    if (!window.confirm(t('profile.confirmCancel'))) {
       return;
     }
 
@@ -100,7 +99,7 @@ const ProfilePage: React.FC = () => {
       setError(null);
     } catch (error: any) {
       console.error('Error cancelling booking:', error);
-      setError(error.message || 'Ошибка отмены бронирования');
+      setError(error.message || t('profile.errors.cancelBooking'));
     } finally {
       setLoadingBookingId(null);
     }
@@ -108,11 +107,11 @@ const ProfilePage: React.FC = () => {
 
   const getStatusText = (status: string) => {
     const statusMap = {
-      pending: 'Ожидает подтверждения',
-      confirmed: 'Подтверждено',
-      active: 'Активно',
-      completed: 'Завершено',
-      cancelled: 'Отменено'
+      pending: t('profile.status.pending'),
+      confirmed: t('profile.status.confirmed'),
+      active: t('profile.status.active'),
+      completed: t('profile.status.completed'),
+      cancelled: t('profile.status.cancelled')
     };
     return statusMap[status as keyof typeof statusMap] || status;
   };
@@ -122,11 +121,15 @@ const ProfilePage: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
+    return new Date(dateString).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ru-RU', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const formatPrice = (price: number) => {
+    return price.toLocaleString(i18n.language === 'en' ? 'en-US' : 'ru-RU');
   };
 
   // Удаляем неиспользуемую функцию calculateDays
@@ -172,7 +175,7 @@ const ProfilePage: React.FC = () => {
       await loadBookings();
       setError(null);
     } catch (error: any) {
-      setError(error.message || 'Ошибка изменения дат бронирования');
+      setError(error.message || t('profile.errors.editDates'));
     } finally {
       setLoadingBookingId(null);
     }
@@ -188,12 +191,12 @@ const ProfilePage: React.FC = () => {
         new_password: newPassword,
         new_password_confirm: newPasswordConfirm
       });
-      setSuccessMessage('Пароль успешно изменен');
+      setSuccessMessage(t('profile.passwordChanged'));
       setOldPassword('');
       setNewPassword('');
       setNewPasswordConfirm('');
     } catch (err: any) {
-      setPasswordError(err.message || 'Ошибка при смене пароля');
+      setPasswordError(err.message || t('profile.errors.changePassword'));
     }
   };
 
@@ -202,10 +205,10 @@ const ProfilePage: React.FC = () => {
       <div className={styles.profilePage}>
         <div className={globalStyles.container}>
           <div className={styles.error}>
-            <h1>Необходима авторизация</h1>
-            <p>Пожалуйста, войдите в систему для просмотра профиля</p>
+            <h1>{t('profile.authRequiredTitle')}</h1>
+            <p>{t('profile.authRequiredText')}</p>
             <Link to="/login" className={styles.loginButton}>
-              Войти
+              {t('profile.loginBtn')}
             </Link>
           </div>
         </div>
@@ -219,7 +222,7 @@ const ProfilePage: React.FC = () => {
         <div className={globalStyles.container}>
           <div className={styles.loading}>
             <div className={styles.loadingSpinner}></div>
-            <p>Загрузка данных...</p>
+            <p>{t('profile.loading')}</p>
           </div>
         </div>
       </div>
@@ -239,7 +242,7 @@ const ProfilePage: React.FC = () => {
               <p>{user.email}</p>
               {user.date_joined && (
                 <span className={styles.memberSince}>
-                  Участник с {formatDate(user.date_joined)}
+                  {t('profile.memberSince', { date: formatDate(user.date_joined) })}
                 </span>
               )}
             </div>
@@ -255,7 +258,7 @@ const ProfilePage: React.FC = () => {
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
-            Профиль
+            {t('profile.tab.profile')}
           </button>
           <button
             className={`${styles.tab} ${activeTab === 'bookings' ? styles.tabActive : ''}`}
@@ -267,7 +270,7 @@ const ProfilePage: React.FC = () => {
               <line x1="8" y1="2" x2="8" y2="6"/>
               <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            Мои бронирования ({Array.isArray(bookings) ? bookings.length : 0})
+            {t('profile.tab.bookings', { count: Array.isArray(bookings) ? bookings.length : 0 })}
           </button>
         </div>
 
@@ -282,7 +285,7 @@ const ProfilePage: React.FC = () => {
             <div className={styles.profileContent}>
               <div className={styles.profileCard}>
                 <div className={styles.cardHeader}>
-                  <h2>Личная информация</h2>
+                  <h2>{t('profile.personalInfo')}</h2>
                   {!isEditing && (
                     <button
                       className={styles.editButton}
@@ -292,7 +295,7 @@ const ProfilePage: React.FC = () => {
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                       </svg>
-                      Редактировать
+                      {t('profile.edit')}
                     </button>
                   )}
                 </div>
@@ -301,7 +304,7 @@ const ProfilePage: React.FC = () => {
                   <form onSubmit={handleEditSubmit} className={styles.editForm}>
                     <div className={styles.formRow}>
                       <div className={styles.inputGroup}>
-                        <label>Имя</label>
+                        <label>{t('profile.firstName')}</label>
                         <input
                           type="text"
                           value={editForm.first_name}
@@ -310,7 +313,7 @@ const ProfilePage: React.FC = () => {
                         />
                       </div>
                       <div className={styles.inputGroup}>
-                        <label>Фамилия</label>
+                        <label>{t('profile.lastName')}</label>
                         <input
                           type="text"
                           value={editForm.last_name}
@@ -346,7 +349,7 @@ const ProfilePage: React.FC = () => {
                           });
                         }}
                       >
-                        Отмена
+                        {t('profile.cancel')}
                       </button>
                     </div>
                   </form>
@@ -357,15 +360,15 @@ const ProfilePage: React.FC = () => {
                       <span className={styles.infoValue}>{user.email}</span>
                     </div>
                     <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Имя:</span>
-                      <span className={styles.infoValue}>{user.first_name || 'Не указано'}</span>
+                      <span className={styles.infoLabel}>{t('profile.firstName')}:</span>
+                      <span className={styles.infoValue}>{user.first_name || t('profile.notSpecified')}</span>
                     </div>
                     <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Фамилия:</span>
-                      <span className={styles.infoValue}>{user.last_name || 'Не указано'}</span>
+                      <span className={styles.infoLabel}>{t('profile.lastName')}:</span>
+                      <span className={styles.infoValue}>{user.last_name || t('profile.notSpecified')}</span>
                     </div>
                     <div className={styles.infoRow}>
-                      <span className={styles.infoLabel}>Имя пользователя:</span>
+                      <span className={styles.infoLabel}>{t('profile.username')}:</span>
                       <span className={styles.infoValue}>{user.username}</span>
                     </div>
                   </div>
@@ -373,7 +376,7 @@ const ProfilePage: React.FC = () => {
               </div>
               <Card size="large" variant="elevated" className={styles.passwordCard}>
                 <Card.Header>
-                  <h2>Смена пароля</h2>
+                  <h2>{t('profile.changePassword')}</h2>
                 </Card.Header>
                 <form onSubmit={handlePasswordChange} autoComplete="off">
                   <Card.Content>
@@ -382,9 +385,9 @@ const ProfilePage: React.FC = () => {
                         type="password"
                         value={oldPassword}
                         onChange={(e) => setOldPassword(e.target.value)}
-                        placeholder="Текущий пароль"
+                        placeholder={t('profile.currentPassword')}
                         required
-                        label="Текущий пароль"
+                        label={t('profile.currentPassword')}
                       />
                     </div>
                     <div style={{ marginBottom: '1rem' }}>
@@ -392,9 +395,9 @@ const ProfilePage: React.FC = () => {
                         type="password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Новый пароль"
+                        placeholder={t('profile.newPassword')}
                         required
-                        label="Новый пароль"
+                        label={t('profile.newPassword')}
                       />
                     </div>
                     <div style={{ marginBottom: '1rem' }}>
@@ -402,16 +405,16 @@ const ProfilePage: React.FC = () => {
                         type="password"
                         value={newPasswordConfirm}
                         onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                        placeholder="Подтверждение нового пароля"
+                        placeholder={t('profile.newPasswordConfirm')}
                         required
-                        label="Подтверждение нового пароля"
+                        label={t('profile.newPasswordConfirm')}
                       />
                     </div>
                     {passwordError && <div className={styles.errorMessage}>{passwordError}</div>}
                     {successMessage && <div className={styles.successMessage}>{successMessage}</div>}
                   </Card.Content>
                   <Card.Actions align="left">
-                    <Button type="submit" color="primary" size="large">Изменить пароль</Button>
+                    <Button type="submit" color="primary" size="large">{t('profile.changePasswordBtn')}</Button>
                   </Card.Actions>
                 </form>
               </Card>
@@ -423,10 +426,10 @@ const ProfilePage: React.FC = () => {
               {!Array.isArray(bookings) || bookings.length === 0 ? (
                 <div className={styles.emptyState}>
                   <div className={styles.emptyIcon}>📅</div>
-                  <h3>У вас пока нет бронирований</h3>
-                  <p>Выберите автомобиль из нашего каталога и сделайте первое бронирование</p>
+                  <h3>{t('profile.noBookingsTitle')}</h3>
+                  <p>{t('profile.noBookingsText')}</p>
                   <Link to="/cars" className={styles.browseCarsButton}>
-                    Посмотреть автомобили
+                    {t('profile.browseCarsBtn')}
                   </Link>
                 </div>
               ) : (
@@ -435,19 +438,19 @@ const ProfilePage: React.FC = () => {
                     <div className={styles.bookingsStats}>
                       <div className={styles.stat}>
                         <span className={styles.statNumber}>{getBookingStats().total}</span>
-                        <span className={styles.statLabel}>Всего</span>
+                        <span className={styles.statLabel}>{t('profile.stats.total')}</span>
                       </div>
                       <div className={styles.stat}>
                         <span className={styles.statNumber}>{getBookingStats().pending}</span>
-                        <span className={styles.statLabel}>Ожидает</span>
+                        <span className={styles.statLabel}>{t('profile.stats.pending')}</span>
                       </div>
                       <div className={styles.stat}>
                         <span className={styles.statNumber}>{getBookingStats().confirmed}</span>
-                        <span className={styles.statLabel}>Подтверждено</span>
+                        <span className={styles.statLabel}>{t('profile.stats.confirmed')}</span>
                       </div>
                       <div className={styles.stat}>
                         <span className={styles.statNumber}>{getBookingStats().cancelled}</span>
-                        <span className={styles.statLabel}>Отменено</span>
+                        <span className={styles.statLabel}>{t('profile.stats.cancelled')}</span>
                       </div>
                     </div>
                     
@@ -457,28 +460,28 @@ const ProfilePage: React.FC = () => {
                         variant="text"
                         onClick={() => setBookingFilter('all')}
                       >
-                        Все ({getBookingStats().total})
+                        {t('profile.filters.all', { count: getBookingStats().total })}
                       </Button>
                       <Button
                         className={`${styles.filterButton} ${bookingFilter === 'pending' ? styles.filterActive : ''}`}
                         variant="text"
                         onClick={() => setBookingFilter('pending')}
                       >
-                        Ожидает ({getBookingStats().pending})
+                        {t('profile.filters.pending', { count: getBookingStats().pending })}
                       </Button>
                       <Button
                         className={`${styles.filterButton} ${bookingFilter === 'confirmed' ? styles.filterActive : ''}`}
                         variant="text"
                         onClick={() => setBookingFilter('confirmed')}
                       >
-                        Подтверждено ({getBookingStats().confirmed})
+                        {t('profile.filters.confirmed', { count: getBookingStats().confirmed })}
                       </Button>
                       <Button
                         className={`${styles.filterButton} ${bookingFilter === 'cancelled' ? styles.filterActive : ''}`}
                         variant="text"
                         onClick={() => setBookingFilter('cancelled')}
                       >
-                        Отменено ({getBookingStats().cancelled})
+                        {t('profile.filters.cancelled', { count: getBookingStats().cancelled })}
                       </Button>
                     </div>
                   </div>
@@ -488,7 +491,7 @@ const ProfilePage: React.FC = () => {
                     <div key={booking.id} className={styles.bookingCard}>
                       <div className={styles.bookingImage}>
                         <img
-                          src={booking.car.image_url || booking.car.image}
+                          src={booking.car.image_url ?? booking.car.image ?? undefined}
                           alt={`${booking.car.brand} ${booking.car.name}`}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
@@ -502,7 +505,7 @@ const ProfilePage: React.FC = () => {
                       <div className={styles.bookingInfo}>
                         <div className={styles.bookingHeader}>
                           <h3>{booking.car.brand} {booking.car.name}</h3>
-                          <span className={styles.bookingId}>#{booking.id}</span>
+                          <span className={styles.bookingId}>{t('profile.bookingNumber', { number: booking.id })}</span>
                         </div>
                         <div className={styles.bookingDetails}>
                           <div className={styles.bookingDates}>
@@ -518,26 +521,26 @@ const ProfilePage: React.FC = () => {
                               </span>
                             </div>
                             <span className={styles.duration}>
-                              {booking.days_count} дн.
+                              {t('profile.daysCount', { count: Number(booking.days_count) })}
                             </span>
                           </div>
                           <div className={styles.bookingPrice}>
-                              <div className={styles.pricePerDay}>
-                            {Number(booking.car.price || 0).toLocaleString('ru-RU')} ₽/день
-                          </div>
-                              {booking.total_price && (
-                                <div className={styles.totalPrice}>
-                                  Итого: {Number(booking.total_price).toLocaleString('ru-RU')} ₽
-                                </div>
-                              )}
+                            <div className={styles.pricePerDay}>
+                              {formatPrice(Number(booking.car.price || 0))} {t('profile.pricePerDay')}
                             </div>
+                            {booking.total_price && (
+                              <div className={styles.totalPrice}>
+                                {t('profile.total')}: {formatPrice(Number(booking.total_price))} ₽
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div className={styles.bookingActions}>
                           <Link
                             to={`/cars/${booking.car.id}`}
                             className={styles.viewCarButton}
                           >
-                            Посмотреть автомобиль
+                            {t('profile.viewCarBtn')}
                           </Link>
                           {booking.status === 'pending' && (
                             <>
@@ -548,7 +551,7 @@ const ProfilePage: React.FC = () => {
                                 onClick={() => handleCancelBooking(booking.id)}
                                 disabled={loadingBookingId === booking.id}
                               >
-                                {loadingBookingId === booking.id ? 'Отменяем...' : 'Отменить'}
+                                {loadingBookingId === booking.id ? t('profile.cancelling') : t('profile.cancelBooking')}
                               </Button>
                               <Button
                                 variant="outlined"
@@ -556,7 +559,7 @@ const ProfilePage: React.FC = () => {
                                 onClick={() => handleOpenEditModal(booking)}
                                 disabled={loadingBookingId === booking.id}
                               >
-                                Изменить дату
+                                {t('profile.editBookingDates')}
                               </Button>
                             </>
                           )}
@@ -574,11 +577,11 @@ const ProfilePage: React.FC = () => {
       {isEditModalOpen && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
-            <h3>Изменить даты бронирования</h3>
+            <h3>{t('profile.editBookingDates')}</h3>
             <form onSubmit={handleEditBookingDates} className={styles.editBookingForm}>
               <Input
                 type="date"
-                label="Дата начала аренды"
+                label={t('profile.rentStartDate')}
                 value={editDates.date_from}
                 onChange={e => setEditDates(d => ({...d, date_from: e.target.value}))}
                 min={new Date().toISOString().split('T')[0]}
@@ -587,7 +590,7 @@ const ProfilePage: React.FC = () => {
               />
               <Input
                 type="date"
-                label="Дата окончания аренды"
+                label={t('profile.rentEndDate')}
                 value={editDates.date_to}
                 onChange={e => setEditDates(d => ({...d, date_to: e.target.value}))}
                 min={editDates.date_from || new Date().toISOString().split('T')[0]}
@@ -596,10 +599,10 @@ const ProfilePage: React.FC = () => {
               />
               <div className={styles.modalActions}>
                 <Button type="submit" variant="filled" color="primary" disabled={loadingBookingId !== null}>
-                  Сохранить
+                  {t('profile.save')}
                 </Button>
                 <Button type="button" variant="outlined" color="secondary" onClick={() => setIsEditModalOpen(false)}>
-                  Отмена
+                  {t('profile.cancel')}
                 </Button>
               </div>
             </form>

@@ -5,12 +5,14 @@ import { Car } from '../../types';
 import { Button, Card, Rating } from '../../components/UI';
 import styles from './HomePage.module.css';
 import globalStyles from '../../styles/globals.module.css';
+import { useTranslation } from 'react-i18next';
 
 const HomePage: React.FC = () => {
   const { data: carsResponse, isLoading, error } = useQuery({
     queryKey: ['cars'],
     queryFn: () => carsAPI.getAll({}),
   });
+  const { t } = useTranslation();
 
   // Process API response - Django REST Framework returns paginated data
   const featuredCars: Car[] = (() => {
@@ -40,7 +42,7 @@ const HomePage: React.FC = () => {
                 Prestige<span className={styles.accent}>Wheels</span>
               </h1>
               <p className={styles.heroSubtitle}>
-                Откройте для себя новый уровень комфорта с нашей коллекцией премиальных автомобилей
+                {t('home.heroSubtitle')}
               </p>
               <div className={styles.heroButtons}>
                 <Button 
@@ -54,7 +56,7 @@ const HomePage: React.FC = () => {
                   </svg>
                   }
                 >
-                  Выбрать автомобиль
+                  {t('home.chooseCar')}
                 </Button>
               </div>
             </div>
@@ -69,25 +71,25 @@ const HomePage: React.FC = () => {
             <Card variant="flat" size="medium" className={styles.statCard}>
               <Card.Content>
               <div className={styles.statNumber}>50+</div>
-              <div className={styles.statLabel}>Премиальных автомобилей</div>
+              <div className={styles.statLabel}>{t('home.stats.premiumCars')}</div>
               </Card.Content>
             </Card>
             <Card variant="flat" size="medium" className={styles.statCard}>
               <Card.Content>
               <div className={styles.statNumber}>1000+</div>
-              <div className={styles.statLabel}>Довольных клиентов</div>
+              <div className={styles.statLabel}>{t('home.stats.happyClients')}</div>
               </Card.Content>
             </Card>
             <Card variant="flat" size="medium" className={styles.statCard}>
               <Card.Content>
               <div className={styles.statNumber}>24/7</div>
-              <div className={styles.statLabel}>Поддержка клиентов</div>
+              <div className={styles.statLabel}>{t('home.stats.support247')}</div>
               </Card.Content>
             </Card>
             <Card variant="flat" size="medium" className={styles.statCard}>
               <Card.Content>
               <div className={styles.statNumber}>100%</div>
-              <div className={styles.statLabel}>Гарантия качества</div>
+              <div className={styles.statLabel}>{t('home.stats.qualityGuarantee')}</div>
               </Card.Content>
             </Card>
           </div>
@@ -98,20 +100,20 @@ const HomePage: React.FC = () => {
       <section className={styles.featuredCars} aria-label="Популярные автомобили">
         <div className={globalStyles.container}>
           <header className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Наши автомобили</h2>
+            <h2 className={styles.sectionTitle}>{t('home.ourCars')}</h2>
             <p className={styles.sectionSubtitle}>
-              Выберите идеальный автомобиль из нашей коллекции
+              {t('home.chooseFromCollection')}
             </p>
           </header>
           
           {error ? (
             <div className={styles.error} role="alert">
-              <p>Ошибка загрузки автомобилей. Пожалуйста, попробуйте позже.</p>
+              <p>{t('home.errorLoadingCars')}</p>
             </div>
           ) : isLoading ? (
             <div className={styles.loading} role="status">
               <div className={styles.loadingSpinner}></div>
-              <p>Загружаем автомобили...</p>
+              <p>{t('home.loadingCars')}</p>
             </div>
           ) : featuredCars.length > 0 ? (
             <div className={styles.carsGrid}>
@@ -155,18 +157,18 @@ const HomePage: React.FC = () => {
                             size="small"
                           />
                           <span className={styles.reviewsCount}>
-                            {car.total_reviews} отзывов
+                            {car.total_reviews} {t('home.reviews')}
                         </span>
                         </>
                       ) : (
                         <span className={styles.reviewsCount}>
-                          Нет отзывов
+                          {t('home.noReviews')}
                         </span>
                       )}
                     </div>
                     <div className={styles.carPrice}>
                       <span className={styles.priceValue}>{Number(car.price || 0).toLocaleString()} ₽</span>
-                      <span className={styles.pricePeriod}>за сутки</span>
+                      <span className={styles.pricePeriod}>{t('home.perDay')}</span>
                     </div>
                     <div className={styles.cardActions}>
                       <Button 
@@ -181,7 +183,7 @@ const HomePage: React.FC = () => {
                           }
                         }}
                     >
-                      {car.is_available ? 'Подробнее' : 'Недоступен'}
+                      {car.is_available ? t('home.moreDetails') : t('home.unavailable')}
                       </Button>
                     </div>
                   </div>
@@ -190,7 +192,7 @@ const HomePage: React.FC = () => {
             </div>
           ) : (
             <div className={styles.noCars}>
-              <p>Автомобили временно недоступны</p>
+              <p>{t('home.noCars')}</p>
             </div>
           )}
           
@@ -201,7 +203,7 @@ const HomePage: React.FC = () => {
               size="large"
               onClick={() => window.location.href = '/cars'}
             >
-              Посмотреть все автомобили
+              {t('home.viewAllCars')}
             </Button>
           </div>
         </div>
@@ -211,7 +213,7 @@ const HomePage: React.FC = () => {
       <section className={styles.features} aria-label="Преимущества">
         <div className={globalStyles.container}>
           <header className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Почему выбирают нас</h2>
+            <h2 className={styles.sectionTitle}>{t('home.whyChooseUs')}</h2>
           </header>
           <div className={styles.featuresGrid}>
             <Card variant="outlined" size="medium" className={styles.featureCard}>
@@ -221,9 +223,9 @@ const HomePage: React.FC = () => {
                   <path d="M5 13l4 4L19 7"/>
                 </svg>
               </div>
-              <h3 className={styles.featureTitle}>Премиальное качество</h3>
+              <h3 className={styles.featureTitle}>{t('home.features.premiumQuality')}</h3>
               <p className={styles.featureDescription}>
-                Только лучшие автомобили с полным техническим обслуживанием
+                {t('home.features.premiumQualityDesc')}
               </p>
               </Card.Content>
             </Card>
@@ -234,9 +236,9 @@ const HomePage: React.FC = () => {
                   <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
               </div>
-              <h3 className={styles.featureTitle}>Быстрая аренда</h3>
+              <h3 className={styles.featureTitle}>{t('home.features.fastRental')}</h3>
               <p className={styles.featureDescription}>
-                Оформление за 5 минут онлайн с моментальным подтверждением
+                {t('home.features.fastRentalDesc')}
               </p>
               </Card.Content>
             </Card>
@@ -247,9 +249,9 @@ const HomePage: React.FC = () => {
                   <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
               </div>
-              <h3 className={styles.featureTitle}>Полная страховка</h3>
+              <h3 className={styles.featureTitle}>{t('home.features.fullInsurance')}</h3>
               <p className={styles.featureDescription}>
-                Комплексное страхование КАСКО для вашего спокойствия
+                {t('home.features.fullInsuranceDesc')}
               </p>
               </Card.Content>
             </Card>
@@ -260,9 +262,9 @@ const HomePage: React.FC = () => {
                   <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                 </svg>
               </div>
-              <h3 className={styles.featureTitle}>Поддержка 24/7</h3>
+              <h3 className={styles.featureTitle}>{t('home.features.support247')}</h3>
               <p className={styles.featureDescription}>
-                Круглосуточная помощь и консультации по всем вопросам
+                {t('home.features.support247Desc')}
               </p>
               </Card.Content>
             </Card>

@@ -41,6 +41,105 @@
   margin-bottom: 0.5rem;
 }
 
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 3rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.logoBlock {
+  flex: 1 1 260px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.2rem;
+}
+
+.logoWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.logoImg {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.logoText {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.slogan {
+  color: #c7d2fe;
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+}
+
+.socials {
+  display: flex;
+  gap: 1.1rem;
+  margin-top: 0.5rem;
+}
+
+.socialLink {
+  color: #a5b4fc;
+  font-size: 1.5rem;
+  transition: color 0.2s;
+}
+
+.socialLink:hover {
+  color: #6366f1;
+}
+
+.infoBlocks {
+  display: flex;
+  gap: 2.5rem;
+  flex: 2 1 400px;
+  min-width: 220px;
+  justify-content: flex-end;
+}
+
+.infoSection {
+  min-width: 180px;
+}
+
+.infoSection h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e0e7ff;
+  margin-bottom: 0.7rem;
+}
+
+.infoSection p, .infoSection address {
+  color: #a5b4fc;
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+  font-style: normal;
+}
+
+.infoSection a {
+  color: #c7d2fe;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.infoSection a:hover {
+  color: #6366f1;
+}
+
 .bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 1rem;
@@ -49,8 +148,40 @@
 
 .bottom p {
   color: #9ca3af;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   margin: 0;
+}
+
+@media (max-width: 900px) {
+  .topRow {
+    flex-direction: column;
+    gap: 2rem;
+    align-items: stretch;
+  }
+  .infoBlocks {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 1.2rem 0.5rem 0.7rem;
+  }
+  .logoText {
+    font-size: 1.2rem;
+  }
+  .logoImg {
+    width: 32px;
+    height: 32px;
+  }
+  .infoSection h4 {
+    font-size: 1rem;
+  }
+  .infoSection p, .infoSection address {
+    font-size: 0.95rem;
+  }
 }
 
 @media (max-width: 768px) {

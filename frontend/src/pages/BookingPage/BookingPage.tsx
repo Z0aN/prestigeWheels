@@ -6,10 +6,12 @@ import { formatPrice } from '../../utils/formatters';
 import styles from './BookingPage.module.css';
 import globalStyles from '../../styles/globals.module.css';
 import { Button, Input } from '../../components/UI';
+import { useTranslation } from 'react-i18next';
 
 const BookingPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { t } = useTranslation();
   
   const [car, setCar] = useState<Car | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -184,7 +186,7 @@ const BookingPage: React.FC = () => {
         <div className={globalStyles.container}>
           <div className={styles.loading}>
             <div className={styles.loadingSpinner}></div>
-            <p>Загрузка информации об автомобиле...</p>
+            <p>{t('booking.loading')}</p>
           </div>
         </div>
       </div>
@@ -196,10 +198,10 @@ const BookingPage: React.FC = () => {
       <div className={styles.bookingPage}>
         <div className={globalStyles.container}>
           <div className={styles.error}>
-            <h1>Ошибка загрузки</h1>
+            <h1>{t('booking.loadErrorTitle')}</h1>
             <p>{error}</p>
             <Link to="/cars" className={styles.backButton}>
-              Вернуться к каталогу
+              {t('booking.backToCatalog')}
             </Link>
           </div>
         </div>
@@ -212,10 +214,10 @@ const BookingPage: React.FC = () => {
       <div className={styles.bookingPage}>
         <div className={globalStyles.container}>
           <div className={styles.error}>
-            <h1>Автомобиль не найден</h1>
-            <p>Запрашиваемый автомобиль не существует или был удален</p>
+            <h1>{t('booking.notFoundTitle')}</h1>
+            <p>{t('booking.notFoundText')}</p>
             <Link to="/cars" className={styles.backButton}>
-              Вернуться к каталогу
+              {t('booking.backToCatalog')}
             </Link>
           </div>
         </div>
@@ -228,13 +230,13 @@ const BookingPage: React.FC = () => {
       <div className={globalStyles.container}>
         {/* Breadcrumbs */}
         <nav className={styles.breadcrumbs}>
-          <Link to="/">Главная</Link>
+          <Link to="/">{t('booking.breadcrumbs.home')}</Link>
           <span>/</span>
-          <Link to="/cars">Каталог</Link>
+          <Link to="/cars">{t('booking.breadcrumbs.catalog')}</Link>
           <span>/</span>
           <Link to={`/cars/${car.id}`}>{car.brand} {car.name}</Link>
           <span>/</span>
-          <span>Бронирование</span>
+          <span>{t('booking.breadcrumbs.booking')}</span>
         </nav>
 
         <div className={styles.bookingContainer}>
@@ -254,13 +256,13 @@ const BookingPage: React.FC = () => {
                 <h1>{car.brand} {car.name}</h1>
                 <div className={styles.carType}>{car.type}</div>
                 <div className={styles.carPrice}>
-                  {formatPrice(car.price)} / сутки
+                  {formatPrice(car.price)} {t('booking.pricePerDay')}
                 </div>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className={styles.bookingForm}>
-              <h2>Детали бронирования</h2>
+              <h2>{t('booking.detailsTitle')}</h2>
               
               {error && (
                 <div className={styles.errorMessage}>
@@ -269,11 +271,11 @@ const BookingPage: React.FC = () => {
               )}
 
               <div className={styles.dateSection}>
-                <h3>Выберите даты</h3>
+                <h3>{t('booking.chooseDates')}</h3>
                 <div className={styles.dateInputs}>
                   <Input
                     type="date"
-                    label="Дата начала аренды"
+                    label={t('booking.rentStartDate')}
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
@@ -283,7 +285,7 @@ const BookingPage: React.FC = () => {
                   />
                   <Input
                     type="date"
-                    label="Дата окончания аренды"
+                    label={t('booking.rentEndDate')}
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     min={startDate || new Date().toISOString().split('T')[0]}
@@ -294,14 +296,14 @@ const BookingPage: React.FC = () => {
                 </div>
                 {daysCount > 0 && (
                   <div className={styles.daysInfo}>
-                    Количество дней: <strong>{daysCount}</strong>
+                    {t('booking.daysCount', { count: daysCount })}
                   </div>
                 )}
               </div>
 
               {car.services && car.services.length > 0 && (
                 <div className={styles.servicesSection}>
-                  <h3>Дополнительные услуги</h3>
+                  <h3>{t('booking.servicesTitle')}</h3>
                   <div className={styles.servicesList}>
                     {car.services.map((service: CarService) => (
                       <div key={service.id} className={styles.serviceItem}>
@@ -316,7 +318,7 @@ const BookingPage: React.FC = () => {
                             <div className={styles.serviceName}>
                               {service.service.name}
                               {service.is_required && (
-                                <span className={styles.requiredBadge}>обязательно</span>
+                                <span className={styles.requiredBadge}>{t('booking.required')}</span>
                               )}
                             </div>
                             {service.notes && (
@@ -340,7 +342,7 @@ const BookingPage: React.FC = () => {
                 disabled={isSubmitting || !car?.is_available}
                 fullWidth
               >
-                {isSubmitting ? 'Оформляем...' : 'Забронировать'}
+                {isSubmitting ? t('booking.submitting') : t('booking.bookBtn')}
               </Button>
             </form>
           </div>
@@ -348,25 +350,25 @@ const BookingPage: React.FC = () => {
           {/* Правая колонка - расчет стоимости */}
           <div className={styles.summarySection}>
             <div className={styles.summary}>
-              <h3>Расчет стоимости</h3>
+              <h3>{t('booking.summaryTitle')}</h3>
               
               {daysCount > 0 ? (
                 <div className={styles.summaryDetails}>
                   <div className={styles.summaryItem}>
-                    <span>Базовая стоимость ({daysCount} дн.)</span>
+                    <span>{t('booking.basePrice', { count: daysCount })}</span>
                     <span>{formatPrice(basePrice)}</span>
                   </div>
                   
                   {discountPercentage > 0 && (
                     <div className={styles.summaryItem}>
-                      <span>Скидка ({discountPercentage}%)</span>
+                      <span>{t('booking.discount', { percent: discountPercentage })}</span>
                       <span className={styles.discount}>-{formatPrice(discountAmount)}</span>
                     </div>
                   )}
                   
                   {servicesPrice > 0 && (
                     <div className={styles.summaryItem}>
-                      <span>Дополнительные услуги</span>
+                      <span>{t('booking.servicesTitle')}</span>
                       <span>{formatPrice(servicesPrice)}</span>
                     </div>
                   )}
@@ -374,35 +376,35 @@ const BookingPage: React.FC = () => {
                   <div className={styles.summaryDivider}></div>
                   
                   <div className={styles.summaryTotal}>
-                    <span>Итого к оплате</span>
+                    <span>{t('booking.total')}</span>
                     <span>{formatPrice(totalPrice)}</span>
                   </div>
                 </div>
               ) : (
                 <div className={styles.noCalculation}>
-                  <p>Выберите даты для расчета стоимости</p>
+                  <p>{t('booking.noCalculation')}</p>
                 </div>
               )}
             </div>
 
             {/* Информация о скидках */}
             <div className={styles.discountInfo}>
-              <h4>Система скидок</h4>
+              <h4>{t('booking.discountsTitle')}</h4>
               <div className={styles.discountList}>
                 <div className={styles.discountItem}>
-                  <span>От 3 дней</span>
+                  <span>{t('booking.discountFromDays', { days: 3 })}</span>
                   <span>5%</span>
                 </div>
                 <div className={styles.discountItem}>
-                  <span>От 7 дней</span>
+                  <span>{t('booking.discountFromDays', { days: 7 })}</span>
                   <span>10%</span>
                 </div>
                 <div className={styles.discountItem}>
-                  <span>От 14 дней</span>
+                  <span>{t('booking.discountFromDays', { days: 14 })}</span>
                   <span>15%</span>
                 </div>
                 <div className={styles.discountItem}>
-                  <span>От 30 дней</span>
+                  <span>{t('booking.discountFromDays', { days: 30 })}</span>
                   <span>20%</span>
                 </div>
               </div>

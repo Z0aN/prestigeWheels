@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './LoginPage.module.css';
+import { useTranslation } from 'react-i18next';
 
 const LoginPage: React.FC = () => {
   const { login, error: authError, clearError, isLoading } = useAuth();
@@ -11,6 +12,7 @@ const LoginPage: React.FC = () => {
   });
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   // Получаем путь, с которого пользователь был перенаправлен
   const from = (location.state as any)?.from?.pathname || '/';
@@ -46,8 +48,8 @@ const LoginPage: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.loginCard}>
           <div className={styles.header}>
-            <h1>Добро пожаловать</h1>
-            <p>Войдите в свой аккаунт</p>
+            <h1>{t('auth.login.welcome')}</h1>
+            <p>{t('auth.login.subtitle')}</p>
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
@@ -65,31 +67,28 @@ const LoginPage: React.FC = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="Введите ваш email"
+                placeholder={t('auth.login.emailPlaceholder')}
                 required
               />
             </div>
 
             <div className={styles.inputGroup}>
-              <label htmlFor="password">Пароль</label>
+              <label htmlFor="password">{t('auth.login.password')}</label>
               <input
                 type="password"
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Введите ваш пароль"
+                placeholder={t('auth.login.passwordPlaceholder')}
                 required
               />
             </div>
 
             <div className={styles.formOptions}>
               <label className={styles.checkbox}>
-                <input type="checkbox" /> Запомнить меня
+                <input type="checkbox" /> {t('auth.login.rememberMe')}
               </label>
-              <Link to="/forgot-password" className={styles.link}>
-                Забыли пароль?
-              </Link>
             </div>
 
             <button
@@ -100,19 +99,19 @@ const LoginPage: React.FC = () => {
               {isLoading ? (
                 <>
                   <span className={styles.spinner} />
-                  Вход...
+                  {t('auth.login.loading')}
                 </>
               ) : (
-                'Войти'
+                t('auth.login.loginBtn')
               )}
             </button>
           </form>
 
           <div className={styles.footer}>
             <p>
-              Нет аккаунта?
+              {t('auth.login.noAccount')}
               <Link to="/register" className={styles.registerLink}>
-                Зарегистрироваться
+                {t('auth.login.registerLink')}
               </Link>
             </p>
           </div>
@@ -121,9 +120,7 @@ const LoginPage: React.FC = () => {
         <div className={styles.visual}>
           <div className={styles.visualContent}>
             <h2>Prestige Wheels</h2>
-            <p>
-              Откройте для себя мир роскошных автомобилей с нашим премиальным сервисом аренды
-            </p>
+            <p>{t('auth.login.visualText')}</p>
           </div>
         </div>
       </div>

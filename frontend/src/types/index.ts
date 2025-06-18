@@ -7,8 +7,11 @@ export interface Car {
   is_available: boolean;
   average_rating: number | string;
   total_reviews: number | string;
-  image: string;
-  image_url?: string;
+  image: string | null;
+  image_url?: string | null;
+  document: string | null;
+  document_url?: string | null;
+  video_url?: string | null;
   services: CarService[];
 }
 

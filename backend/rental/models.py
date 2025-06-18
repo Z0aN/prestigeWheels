@@ -38,6 +38,8 @@ class Car(models.Model):
     available = AvailableCarManager()
 
     image = models.ImageField("Фото", upload_to="cars/", blank=True, null=True)
+    document = models.FileField("Документ (техпаспорт, страховка)", upload_to="car_docs/", blank=True, null=True)
+    video_url = models.URLField("Видео или дополнительный материал", blank=True, null=True)
 
     services = models.ManyToManyField(
         "Service",

@@ -16,7 +16,6 @@ import CarsPage from './pages/CarsPage/CarsPage';
 import CarDetailPage from './pages/CarDetailPage/CarDetailPage';
 import LoginPage from './pages/LoginPage/LoginPage';
 import RegisterPage from './pages/RegisterPage/RegisterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import BookingPage from './pages/BookingPage/BookingPage';
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
@@ -52,7 +51,6 @@ function App() {
                 <Route path="/cars/:id" element={<CarDetailPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 
                 {/* Protected Routes */}
                 <Route path="/profile" element={

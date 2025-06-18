@@ -20,12 +20,13 @@ class CarServiceSerializer(serializers.ModelSerializer):
 class CarSerializer(serializers.ModelSerializer):
     services = CarServiceSerializer(source='carservice_set', many=True, read_only=True)
     image_url = serializers.SerializerMethodField()
+    document_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Car
         fields = [
             'id', 'name', 'brand', 'type', 'price', 'is_available',
-            'average_rating', 'total_reviews', 'image', 'image_url', 'services'
+            'average_rating', 'total_reviews', 'image', 'image_url', 'document', 'document_url', 'video_url', 'services'
         ]
     
     def get_image_url(self, obj):
@@ -33,6 +34,13 @@ class CarSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri(obj.image.url)
+        return None
+    
+    def get_document_url(self, obj):
+        if obj.document:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.document.url)
         return None
 
 

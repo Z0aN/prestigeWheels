@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './RegisterPage.module.css';
+import { useTranslation } from 'react-i18next';
 
 const RegisterPage: React.FC = () => {
   const { register, error: authError, clearError, isLoading } = useAuth();
@@ -15,6 +16,7 @@ const RegisterPage: React.FC = () => {
   });
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Clear any previous auth errors when component mounts
@@ -96,8 +98,8 @@ const RegisterPage: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.registerCard}>
           <div className={styles.header}>
-            <h1>Регистрация</h1>
-            <p>Создайте аккаунт для доступа к сервису</p>
+            <h1>{t('auth.register.title')}</h1>
+            <p>{t('auth.register.subtitle')}</p>
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
@@ -109,14 +111,14 @@ const RegisterPage: React.FC = () => {
 
             <div className={styles.nameRow}>
               <div className={styles.inputGroup}>
-                <label htmlFor="first_name">Имя</label>
+                <label htmlFor="first_name">{t('auth.register.firstName')}</label>
                 <input
                   type="text"
                   id="first_name"
                   name="first_name"
                   value={formData.first_name}
                   onChange={handleChange}
-                  placeholder="Введите ваше имя"
+                  placeholder={t('auth.register.firstNamePlaceholder')}
                   className={errors.first_name ? styles.inputError : ''}
                 />
                 {errors.first_name && (
@@ -125,14 +127,14 @@ const RegisterPage: React.FC = () => {
               </div>
 
               <div className={styles.inputGroup}>
-                <label htmlFor="last_name">Фамилия</label>
+                <label htmlFor="last_name">{t('auth.register.lastName')}</label>
                 <input
                   type="text"
                   id="last_name"
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleChange}
-                  placeholder="Введите вашу фамилию"
+                  placeholder={t('auth.register.lastNamePlaceholder')}
                   className={errors.last_name ? styles.inputError : ''}
                 />
                 {errors.last_name && (
@@ -149,7 +151,7 @@ const RegisterPage: React.FC = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="Введите ваш email"
+                placeholder={t('auth.register.emailPlaceholder')}
                 className={errors.email ? styles.inputError : ''}
               />
               {errors.email && (
@@ -159,14 +161,14 @@ const RegisterPage: React.FC = () => {
 
             <div className={styles.passwordRow}>
               <div className={styles.inputGroup}>
-                <label htmlFor="password">Пароль</label>
+                <label htmlFor="password">{t('auth.register.password')}</label>
                 <input
                   type="password"
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Введите пароль"
+                  placeholder={t('auth.register.passwordPlaceholder')}
                   className={errors.password ? styles.inputError : ''}
                 />
                 {errors.password && (
@@ -175,14 +177,14 @@ const RegisterPage: React.FC = () => {
               </div>
 
               <div className={styles.inputGroup}>
-                <label htmlFor="password_confirm">Подтверждение пароля</label>
+                <label htmlFor="password_confirm">{t('auth.register.passwordConfirm')}</label>
                 <input
                   type="password"
                   id="password_confirm"
                   name="password_confirm"
                   value={formData.password_confirm}
                   onChange={handleChange}
-                  placeholder="Подтвердите пароль"
+                  placeholder={t('auth.register.passwordConfirmPlaceholder')}
                   className={errors.password_confirm ? styles.inputError : ''}
                 />
                 {errors.password_confirm && (
@@ -199,7 +201,7 @@ const RegisterPage: React.FC = () => {
                   checked={formData.agreeToTerms}
                   onChange={handleChange}
                 />
-                Я принимаю <Link to="/terms" className={styles.link}>условия использования</Link> и <Link to="/privacy" className={styles.link}>политику конфиденциальности</Link>
+                {t('auth.register.agreeToTerms', { terms: `<a href='/terms' class='${styles.link}'>${t('auth.register.terms')}</a>`, privacy: `<a href='/privacy' class='${styles.link}'>${t('auth.register.privacy')}</a>` })}
               </label>
               {errors.agreeToTerms && (
                 <span className={styles.fieldError}>{errors.agreeToTerms}</span>
@@ -214,19 +216,19 @@ const RegisterPage: React.FC = () => {
               {isLoading ? (
                 <>
                   <span className={styles.spinner} />
-                  Регистрация...
+                  {t('auth.register.loading')}
                 </>
               ) : (
-                'Зарегистрироваться'
+                t('auth.register.registerBtn')
               )}
             </button>
           </form>
 
           <div className={styles.footer}>
             <p>
-              Уже есть аккаунт?
+              {t('auth.register.haveAccount')}
               <Link to="/login" className={styles.loginLink}>
-                Войти
+                {t('auth.register.loginLink')}
               </Link>
             </p>
           </div>
@@ -235,9 +237,7 @@ const RegisterPage: React.FC = () => {
         <div className={styles.visual}>
           <div className={styles.visualContent}>
             <h2>Prestige Wheels</h2>
-            <p>
-              Откройте для себя мир роскошных автомобилей с нашим премиальным сервисом аренды
-            </p>
+            <p>{t('auth.register.visualText')}</p>
           </div>
         </div>
       </div>
