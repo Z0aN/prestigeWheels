@@ -59,15 +59,15 @@ const Header: React.FC = () => {
           </nav>
           <div className={styles.userMenu}>
             {user ? (
-              <div className={styles.userProfile}>
-                <div className={styles.userAvatar} aria-hidden="true">
+              <div className={styles.userProfile} data-testid="user-profile">
+                <div className={styles.userAvatar} data-testid="user-avatar" aria-hidden="true">
                   {(user.first_name?.[0] || user.username?.[0] || 'U').toUpperCase()}
                 </div>
-                <div className={styles.userInfo}>
-                  <span className={styles.userName}>
+                <div className={styles.userInfo} data-testid="user-info">
+                  <span className={styles.userName} data-testid="user-name">
                     {user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.username}
                   </span>
-                  <span className={styles.userEmail}>{user.email}</span>
+                  <span className={styles.userEmail} data-testid="user-email">{user.email}</span>
                 </div>
                 <div className={styles.dropdown}>
                   <div className={styles.dropdownContent}>
