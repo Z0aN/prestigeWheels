@@ -6,7 +6,12 @@
   .booking-buttons,
   .action-buttons,
   .loading-spinner,
-  .scroll-to-top {
+  .scroll-to-top,
+  header,
+  .header,
+  nav,
+  .nav,
+  .navigation {
     display: none !important;
   }
 

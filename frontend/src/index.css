@@ -11,3 +11,23 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Import print styles */
+@import './styles/print.css';
+
+/* Critical print styles */
+@media print {
+  header,
+  .header,
+  nav,
+  .nav,
+  footer,
+  .footer {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}

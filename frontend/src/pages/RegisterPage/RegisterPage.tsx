@@ -201,7 +201,16 @@ const RegisterPage: React.FC = () => {
                   checked={formData.agreeToTerms}
                   onChange={handleChange}
                 />
-                {t('auth.register.agreeToTerms', { terms: `<a href='/terms' class='${styles.link}'>${t('auth.register.terms')}</a>`, privacy: `<a href='/privacy' class='${styles.link}'>${t('auth.register.privacy')}</a>` })}
+                <span>
+                  {t('auth.register.iAccept')}{' '}
+                  <Link to="/terms" className={styles.link}>
+                    {t('auth.register.terms')}
+                  </Link>
+                  {' '}{t('auth.register.and')}{' '}
+                  <Link to="/privacy" className={styles.link}>
+                    {t('auth.register.privacy')}
+                  </Link>
+                </span>
               </label>
               {errors.agreeToTerms && (
                 <span className={styles.fieldError}>{errors.agreeToTerms}</span>

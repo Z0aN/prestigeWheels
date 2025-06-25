@@ -135,6 +135,14 @@ class Booking(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.car.name}"
 
+    def clean(self):
+        if self.date_to and self.date_from:
+            if self.date_to < self.date_from:
+                raise ValidationError("Дата окончания не может быть раньше даты начала")
+            
+            if self.date_from < timezone.now().date():
+                raise ValidationError("Нельзя создать бронирование на прошедшие даты")
+
     @property
     def days_count(self):
         """Рассчитывает количество дней бронирования"""

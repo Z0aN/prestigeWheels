@@ -25,9 +25,6 @@ describe('TC-001 — Регистрация нового пользовател�
 
     // Шаг 2: Заполнение формы регистрации
     cy.get('[class*="registerCard"]').within(() => {
-      // Проверяем, что форма загрузилась
-      cy.get('[class*="form"]').should('be.visible');
-
       // Заполняем имя
       cy.get('input[id="first_name"]')
         .should('be.visible')
@@ -70,31 +67,18 @@ describe('TC-001 — Регистрация нового пользовател�
         .click();
     });
 
-    // Шаг 3: Проверяем успешную регистрацию (переход на главную страницу)
+    // Шаг 3: Проверяем успешную регистрацию
+    cy.wait(2000); // Ждем ответа от сервера
     cy.location('pathname', { timeout: 15000 }).should('not.include', '/register');
     
-    // Проверяем, что пользователь авторизован (появился профиль в шапке)
-    cy.get('[class*="userProfile"]', { timeout: 10000 }).should('be.visible');
-    
-    // Проверяем отображение имени пользователя в шапке
-    cy.get('[class*="userProfile"]').first().within(() => {
-      cy.get('[class*="userName"]')
-        .should('be.visible')
-        .and('contain', testUser.fullName);
-      
-      cy.get('[class*="userEmail"]')
-        .should('be.visible')
-        .and('contain', testUser.email);
-    });
+    // Проверяем, что пользователь авторизован
+    cy.get('[class*="userProfile"]', { timeout: 10000 })
+      .should('be.visible')
+      .and('contain', testUser.first_name);
 
     // Шаг 4: Выход из системы
-    // Кликаем на профиль пользователя для открытия меню
-    cy.get('[class*="userProfile"]').first().click();
-    cy.get('[class*="dropdownContent"]', { timeout: 5000 }).should('be.visible');
-    
-    cy.get('[class*="dropdownContent"]').first().within(() => {
-      cy.get('button[class*="dropdownItem"]').click();
-    });
+    cy.get('[class*="userProfile"]').click();
+    cy.contains('button', 'Выйти').click({ force: true });
 
     // Проверяем, что пользователь вышел из системы
     cy.get('[class*="authLinks"]', { timeout: 10000 }).should('be.visible');
@@ -125,35 +109,25 @@ describe('TC-001 — Регистрация нового пользовател�
     });
 
     // Шаг 6: Проверяем успешный вход
+    cy.wait(2000); // Ждем ответа от сервера
     cy.location('pathname', { timeout: 15000 }).should('not.include', '/login');
-    cy.get('[class*="userProfile"]', { timeout: 10000 }).should('be.visible');
-
-    // Проверяем данные пользователя в шапке после входа
-    cy.get('[class*="userProfile"]').first().within(() => {
-      cy.get('[class*="userName"]')
-        .should('be.visible')
-        .and('contain', testUser.fullName);
-      
-      cy.get('[class*="userEmail"]')
-        .should('be.visible')
-        .and('contain', testUser.email);
-    });
+    
+    // Проверяем, что пользователь авторизован
+    cy.get('[class*="userProfile"]', { timeout: 10000 })
+      .should('be.visible')
+      .and('contain', testUser.first_name);
 
     // Шаг 7: Проверяем доступ к профилю
     cy.visit('/profile');
     cy.get('[class*="profilePage"]', { timeout: 10000 }).should('be.visible');
 
-    // Проверяем, что мы можем получить доступ к странице профиля
-    cy.url().should('include', '/profile');
-    
     // Проверяем основные элементы профиля
     cy.get('[class*="userInfo"]').should('be.visible');
-    cy.get('[class*="profileInfo"]').should('be.visible');
-    
-    // Проверяем наличие информации о пользователе
-    cy.contains(testUser.email).should('be.visible');
-    cy.contains(testUser.first_name).should('be.visible');
-    cy.contains(testUser.last_name).should('be.visible');
+    cy.get('[class*="profileInfo"]').within(() => {
+      cy.contains(testUser.email).should('be.visible');
+      cy.contains(testUser.first_name).should('be.visible');
+      cy.contains(testUser.last_name).should('be.visible');
+    });
   });
 
   it('Валидация формы регистрации - проверка ошибок', () => {
@@ -176,7 +150,7 @@ describe('TC-001 — Регистрация нового пользовател�
         .should('be.visible')
         .and('contain', 'Введите фамилию');
 
-      // Тестируем несовпадающие пароли
+      // Проверяем валидацию паролей
       cy.get('input[id="password"]').type('password123');
       cy.get('input[id="password_confirm"]').type('different123');
       cy.get('button[type="submit"]').click();

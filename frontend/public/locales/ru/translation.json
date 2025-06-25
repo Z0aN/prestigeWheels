@@ -131,7 +131,13 @@
       "fullInsuranceDesc": "Комплексное страхование КАСКО для вашего спокойствия",
       "support247": "Поддержка 24/7",
       "support247Desc": "Круглосуточная помощь и консультации по всем вопросам"
-    }
+    },
+    "latestReviews": "Последние отзывы",
+    "whatClientsSay": "Что говорят наши клиенты",
+    "errorLoadingReviews": "Ошибка при загрузке отзывов",
+    "loadingReviews": "Загрузка отзывов...",
+    "noReviews": "Пока нет отзывов",
+    "viewAllReviews": "Все отзывы"
   },
   "header": {
     "logo": "Prestige Wheels",
@@ -211,7 +217,8 @@
     "bookBtn": "Забронировать",
     "unavailableForBooking": "Недоступен для бронирования",
     "authNote": "Для бронирования необходимо <a href='/login'>войти в систему</a>",
-    "login": "Войти в систему",
+    "bookingRequiresLogin": "Для бронирования необходимо",
+    "login": "войти в систему",
     "similarTitle": "Похожие автомобили",
     "similarSubtitle": "Другие автомобили этого бренда или типа",
     "similarLoading": "Загружаем похожие автомобили...",
@@ -275,6 +282,8 @@
       "passwordConfirm": "Подтверждение пароля",
       "passwordConfirmPlaceholder": "Подтвердите пароль",
       "agreeToTerms": "Я принимаю {{terms}} и {{privacy}}",
+      "iAccept": "Я принимаю",
+      "and": "и",
       "terms": "условия использования",
       "privacy": "политику конфиденциальности",
       "loading": "Регистрация...",

@@ -1,35 +1,46 @@
 describe('Выход из аккаунта', () => {
-  it('Пользователь выходит, происходит редирект на главную, и кнопки профиля недоступны', () => {
-    // Данные существующего пользователя
-    const email = 'shulga@mail.ru';
-    const password = 'vfrcbv123';
-    const firstName = 'Саша';
+  beforeEach(() => {
+    // Очищаем все данные авторизации
+    cy.clearCookies();
+    cy.clearLocalStorage();
+    cy.window().then((win) => {
+      win.sessionStorage.clear();
+    });
 
-    // Логин
+    // Авторизуемся перед каждым тестом
     cy.visit('/login');
-    cy.get('input[name="email"]').type(email);
-    cy.get('input[name="password"]').type(password);
-    cy.get('button[type="submit"]').click();
-    cy.url().should('match', /\/$/);
-    cy.get('header').should('contain', firstName);
+    cy.get('input[id="email"]')
+      .should('be.visible')
+      .type('shulga@mail.ru');
 
-    // Открываем дропдаун по универсальному селектору
-    cy.get('[class*="userProfile"]').trigger('mouseover');
-    cy.wait(300);
+    cy.get('input[id="password"]')
+      .should('be.visible')
+      .type('vfrcbv123');
 
-    // Кликаем по кнопке «Выйти»
-    cy.get('button').contains('Выйти').click();
+    cy.get('button[type="submit"]')
+      .should('be.visible')
+      .click();
 
-    // Проверяем редирект на главную
-    cy.url().should('match', /\/$/);
+    // Проверяем успешный вход
+    cy.get('[class*="userProfile"]', { timeout: 10000 }).should('be.visible');
+  });
 
-    // Проверяем, что пользователь вышел: [class*="userName"] отсутствует, [class*="registerBtn"] и ссылка на вход присутствуют
-    cy.get('[class*="userName"]').should('not.exist');
-    cy.get('[class*="registerBtn"]').should('exist');
-    cy.get('a[href="/login"]').should('exist');
+  it('Пользователь выходит, происходит редирект на главную, и кнопки профиля недоступны', () => {
+    // Шаг 1: Открываем меню профиля
+    cy.get('[class*="userProfile"]').click();
+    
+    // Шаг 2: Нажимаем кнопку выхода
+    cy.contains('button', 'Выйти').click({ force: true });
 
-    // Проверяем, что кнопки профиля недоступны (например, нет имени пользователя и/или кнопки "Профиль")
-    cy.get('header').should('not.contain', firstName);
-    cy.get('header').should('not.contain', /профиль|profile/i);
+    // Шаг 3: Проверяем, что произошел редирект на главную
+    cy.url().should('eq', Cypress.config().baseUrl + '/');
+
+    // Шаг 4: Проверяем, что пользователь разлогинен
+    cy.get('[class*="authLinks"]').should('be.visible');
+    cy.get('[class*="userProfile"]').should('not.exist');
+
+    // Шаг 5: Проверяем, что защищенные страницы недоступны
+    cy.visit('/profile', { failOnStatusCode: false });
+    cy.url().should('include', '/login');
   });
 }); 

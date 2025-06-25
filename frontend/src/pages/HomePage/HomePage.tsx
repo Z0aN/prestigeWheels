@@ -1,17 +1,24 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { carsAPI } from '../../services/api';
-import { Car } from '../../types';
+import { carsAPI, reviewsAPI } from '../../services/api';
+import { Car, Review } from '../../types';
 import { Button, Card, Rating } from '../../components/UI';
+import LatestReview from '../../components/LatestReview/LatestReview';
 import styles from './HomePage.module.css';
 import globalStyles from '../../styles/globals.module.css';
 import { useTranslation } from 'react-i18next';
 
 const HomePage: React.FC = () => {
-  const { data: carsResponse, isLoading, error } = useQuery({
+  const { data: carsResponse, isLoading: isLoadingCars, error: carsError } = useQuery({
     queryKey: ['cars'],
     queryFn: () => carsAPI.getAll({}),
   });
+
+  const { data: latestReviews, isLoading: isLoadingReviews, error: reviewsError } = useQuery({
+    queryKey: ['latestReviews'],
+    queryFn: () => reviewsAPI.getLatest(),
+  });
+
   const { t } = useTranslation();
 
   // Process API response - Django REST Framework returns paginated data
@@ -106,11 +113,11 @@ const HomePage: React.FC = () => {
             </p>
           </header>
           
-          {error ? (
+          {carsError ? (
             <div className={styles.error} role="alert">
               <p>{t('home.errorLoadingCars')}</p>
             </div>
-          ) : isLoading ? (
+          ) : isLoadingCars ? (
             <div className={styles.loading} role="status">
               <div className={styles.loadingSpinner}></div>
               <p>{t('home.loadingCars')}</p>
@@ -206,6 +213,46 @@ const HomePage: React.FC = () => {
               {t('home.viewAllCars')}
             </Button>
           </div>
+        </div>
+      </section>
+
+      {/* Latest Reviews Section */}
+      <section className={styles.latestReviews} aria-label="Последние отзывы">
+        <div className={globalStyles.container}>
+          <header className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>{t('home.latestReviews')}</h2>
+            <p className={styles.sectionSubtitle}>
+              {t('home.whatClientsSay')}
+            </p>
+          </header>
+          
+          {reviewsError ? (
+            <div className={styles.error} role="alert">
+              <p>{t('home.errorLoadingReviews')}</p>
+            </div>
+          ) : isLoadingReviews ? (
+            <div className={styles.loading} role="status">
+              <div className={styles.loadingSpinner}></div>
+              <p>{t('home.loadingReviews')}</p>
+            </div>
+          ) : latestReviews && latestReviews.length > 0 ? (
+            <div className={styles.reviewsGrid}>
+              {latestReviews.slice(0, 3).map((review: Review) => (
+                <Card 
+                  key={review.id} 
+                  variant="elevated" 
+                  size="medium" 
+                  className={styles.reviewCard}
+                >
+                  <LatestReview review={review} />
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.noReviews}>
+              <p>{t('home.noReviews')}</p>
+            </div>
+          )}
         </div>
       </section>
 

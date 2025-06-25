@@ -128,7 +128,13 @@
       "fullInsuranceDesc": "Comprehensive insurance for your peace of mind",
       "support247": "24/7 support",
       "support247Desc": "Round-the-clock assistance and consultations"
-    }
+    },
+    "latestReviews": "Latest Reviews",
+    "whatClientsSay": "What Our Clients Say",
+    "errorLoadingReviews": "Error loading reviews",
+    "loadingReviews": "Loading reviews...",
+    "noReviews": "No reviews yet",
+    "viewAllReviews": "View All Reviews"
   },
   "header": {
     "logo": "Prestige Wheels",
@@ -207,7 +213,8 @@
     "bookBtn": "Book now",
     "unavailableForBooking": "Unavailable for booking",
     "authNote": "To book, you need to <a href='/login'>log in</a>",
-    "login": "Log in",
+    "bookingRequiresLogin": "To book, you need to",
+    "login": "log in",
     "similarTitle": "Similar cars",
     "similarSubtitle": "Other cars of this brand or type",
     "similarLoading": "Loading similar cars...",
@@ -271,6 +278,8 @@
       "passwordConfirm": "Confirm password",
       "passwordConfirmPlaceholder": "Confirm password",
       "agreeToTerms": "I accept the {{terms}} and {{privacy}}",
+      "iAccept": "I accept the",
+      "and": "and",
       "terms": "terms of use",
       "privacy": "privacy policy",
       "loading": "Registering...",

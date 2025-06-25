@@ -1,20 +1,40 @@
 describe('Вход в аккаунт', () => {
+  beforeEach(() => {
+    // Очищаем все данные авторизации
+    cy.clearCookies();
+    cy.clearLocalStorage();
+    cy.window().then((win) => {
+      win.sessionStorage.clear();
+    });
+  });
+
   it('Пользователь входит с корректными email и паролем, происходит редирект и отображается имя', () => {
-    // Данные существующего пользователя
-    const email = 'shulga@mail.ru'; // Замените на реально существующий email
-    const password = 'vfrcbv123';        // и пароль
-    const firstName = 'Саша';             // Имя, которое должно отображаться в шапке
-
+    // Шаг 1: Переходим на страницу входа
     cy.visit('/login');
+    cy.get('[class*="loginPage"]', { timeout: 10000 }).should('be.visible');
 
-    cy.get('input[name="email"]').type(email);
-    cy.get('input[name="password"]').type(password);
-    cy.get('button[type="submit"]').click();
+    // Шаг 2: Заполняем форму
+    cy.get('input[id="email"]')
+      .should('be.visible')
+      .type('shulga@mail.ru');
 
-    // Проверяем, что редирект на главную
-    cy.url().should('match', /\/$/);
+    cy.get('input[id="password"]')
+      .should('be.visible')
+      .type('vfrcbv123');
 
-    // Проверяем, что имя пользователя отображается в [class*="userName"]
-    cy.get('[class*="userName"]').should('contain', firstName);
+    // Шаг 3: Отправляем форму
+    cy.get('button[type="submit"]')
+      .should('be.visible')
+      .click();
+
+    // Шаг 4: Проверяем успешный вход
+    cy.get('[class*="userProfile"]', { timeout: 10000 }).should('be.visible');
+
+    // Шаг 5: Проверяем редирект
+    cy.url().should('not.include', '/login');
+
+    // Шаг 6: Проверяем, что меню профиля работает
+    cy.get('[class*="userProfile"]').click();
+    cy.contains('button', 'Выйти').should('exist');
   });
 }); 

@@ -381,6 +381,16 @@
   text-decoration: underline;
 }
 
+.link {
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
 /* Reviews Section */
 .reviewsSection {
   margin-bottom: 4rem;

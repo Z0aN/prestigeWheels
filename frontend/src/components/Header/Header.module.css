@@ -470,4 +470,11 @@
   width: 1.1em;
   height: 1.1em;
   color: #6366f1;
+}
+
+/* Print Styles - Hide header when printing */
+@media print {
+  .header {
+    display: none !important;
+  }
 } 

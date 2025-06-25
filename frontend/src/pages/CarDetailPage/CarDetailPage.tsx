@@ -304,7 +304,10 @@ const CarDetailPage: React.FC = () => {
               </button>
               {!isAuthenticated && (
                 <p className={styles.authNote}>
-                  {t('carDetail.authNote', { login: `<a href='/login'>${t('carDetail.login')}</a>` })}
+                  {t('carDetail.bookingRequiresLogin')}{' '}
+                  <Link to="/login" className={styles.link}>
+                    {t('carDetail.login')}
+                  </Link>
                 </p>
               )}
             </div>

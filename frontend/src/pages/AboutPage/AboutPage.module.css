@@ -12,7 +12,7 @@
     rgba(0, 0, 0, 0.55) 0%,
     rgba(0, 0, 0, 0.45) 100%
   ),
-  url('../../assets/about-bg.jpg');
+  url('../../assets/bg.jpg');
   background-size: cover;
   background-position: center;
   color: white;

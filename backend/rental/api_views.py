@@ -254,24 +254,9 @@ def can_review_car(request, car_id):
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def latest_reviews(request):
-    """Получение последних отзывов для каждого автомобиля"""
-    from django.db.models import OuterRef, Subquery
-    
-    # Подзапрос для получения последнего отзыва каждого автомобиля
-    latest_review_ids = Review.objects.filter(
-        booking__car_id=OuterRef('booking__car_id'),
-        is_public=True,
-        is_moderated=True
-    ).order_by('-created_at').values('id')[:1]
-    
-    # Получаем последние отзывы
-    latest_reviews = Review.objects.filter(
-        id__in=Subquery(latest_review_ids),
-        is_public=True,
-        is_moderated=True
-    ).select_related('booking__car', 'booking__user').order_by('-created_at')
-    
-    serializer = PublicReviewSerializer(latest_reviews, many=True, context={'request': request})
+    """Получение последних 5 публичных отзывов"""
+    reviews = Review.objects.filter(is_public=True, is_moderated=True).select_related('booking__car', 'booking__user').order_by('-created_at')[:5]
+    serializer = PublicReviewSerializer(reviews, many=True, context={'request': request})
     return Response(serializer.data)
 
 
